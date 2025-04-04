@@ -9,11 +9,117 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      Users: {
+      orders: {
+        Row: {
+          created_at: string
+          delivery_destination: string
+          delivery_period: number
+          discount: number
+          freight: number | null
+          freight_terms: string
+          id: number
+          net_amount: number
+          order_date: string
+          payment_terms: string
+          remarks: string | null
+          required_date: string
+          sales_tax: number
+          supplier_address: string | null
+          supplier_name: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          delivery_destination: string
+          delivery_period: number
+          discount?: number
+          freight?: number | null
+          freight_terms: string
+          id?: number
+          net_amount: number
+          order_date: string
+          payment_terms: string
+          remarks?: string | null
+          required_date: string
+          sales_tax?: number
+          supplier_address?: string | null
+          supplier_name: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          delivery_destination?: string
+          delivery_period?: number
+          discount?: number
+          freight?: number | null
+          freight_terms?: string
+          id?: number
+          net_amount?: number
+          order_date?: string
+          payment_terms?: string
+          remarks?: string | null
+          required_date?: string
+          sales_tax?: number
+          supplier_address?: string | null
+          supplier_name?: string
+          total_amount?: number
+        }
+        Relationships: []
+      }
+      requested_items: {
+        Row: {
+          additional_specifications: string | null
+          amount: number
+          category: Database["public"]["Enums"]["order_category"]
+          created_at: string
+          id: number
+          item_code: string
+          item_description: string
+          order_id: number
+          quantity: number
+          rate: number
+          unit: string
+        }
+        Insert: {
+          additional_specifications?: string | null
+          amount: number
+          category: Database["public"]["Enums"]["order_category"]
+          created_at?: string
+          id?: number
+          item_code: string
+          item_description: string
+          order_id: number
+          quantity: number
+          rate: number
+          unit: string
+        }
+        Update: {
+          additional_specifications?: string | null
+          amount?: number
+          category?: Database["public"]["Enums"]["order_category"]
+          created_at?: string
+          id?: number
+          item_code?: string
+          item_description?: string
+          order_id?: number
+          quantity?: number
+          rate?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requested_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
         Row: {
           created_at: string
           email: string
-          encrypted_password: string
           first_name: string
           id: string
           is_active: boolean
@@ -23,7 +129,6 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
-          encrypted_password: string
           first_name: string
           id: string
           is_active?: boolean
@@ -33,7 +138,6 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
-          encrypted_password?: string
           first_name?: string
           id?: string
           is_active?: boolean
@@ -50,11 +154,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      order_category: "ZIPPER" | "ACCESSORIES"
       user_roles:
-        | "Super Admin"
-        | "Organizational Admin"
-        | "Process Manager"
-        | "Employee"
+        | "SUPER_ADMIN"
+        | "ORGANIZATIONAL_ADMIN"
+        | "PROCESS_MANAGER"
+        | "EMPLOYEE"
     }
     CompositeTypes: {
       [_ in never]: never

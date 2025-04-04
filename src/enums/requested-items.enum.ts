@@ -1,0 +1,4 @@
+export enum REQUESTED_ITEMS {
+    ZIPPER = 'ZIPPER',
+    ACCESSORIES = 'ACCESSORIES'
+}

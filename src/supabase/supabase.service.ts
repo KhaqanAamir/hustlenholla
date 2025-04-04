@@ -11,19 +11,23 @@ export class SupabaseService {
     constructor() {
         this.SupaBaseClient = createClient(
             process.env.SUPABASE_URL,
-            process.env.SUPABASE_KEY
+            process.env.SUPABASE_KEY,
+            {
+                global: { headers: { Authorization: `Bearer` } }
+            }
         )
     }
     public getSupabaseClient(): SupabaseClient {
         return this.SupaBaseClient
     }
 
-    public async postData<T extends keyof Database['public']['Tables']>(
+    public async postData<T extends keyof Database['public']['Tables'], U extends string = 'id'>(
         tableName: T,
-        dataToPost: TablesInsert<T>
+        dataToPost: TablesInsert<T> | TablesInsert<T>[],
+        selectFields: U = 'id' as U
     ): Promise<CustomResponse> {
         try {
-            const { data, error } = await this.SupaBaseClient.from(tableName).insert(dataToPost).select('*');
+            const { data, error } = await this.SupaBaseClient.from(tableName).insert(dataToPost).select(selectFields);
             if (error) {
                 return { error: true, msg: error.message, data: null, status: error.code ? pgToHttpErr(error.code) : HttpStatus.BAD_REQUEST }
             }
@@ -33,10 +37,9 @@ export class SupabaseService {
                 data: data,
                 status: HttpStatus.OK
             }
-
         }
-        catch {
-            return { error: true, msg: 'An server error occured while posting Data' }
+        catch (e) {
+            return { error: true, msg: `An server error occured while posting Data. ${e}` }
         }
     }
 
@@ -92,6 +95,30 @@ export class SupabaseService {
         }
     }
 
+    async resetPasswordForEmail(email: string): Promise<CustomResponse> {
+        try {
+            let { data, error } = await this.SupaBaseClient.auth.resetPasswordForEmail(email)
+            if (error)
+                return { error: true, msg: 'Unexpected error occured while sending email' }
+
+            return { error: false, msg: 'Email sent Successfully' }
+        }
+        catch (e) {
+            return { error: true, msg: `Unexpected error occurred, while fetching the user. ${e}` };
+        }
+    }
+
+    async resetPassword(newPassword: string) {
+        try {
+            let { data, error } = await this.SupaBaseClient.auth.updateUser({
+                password: newPassword
+            })
+        }
+        catch (e) {
+            return { error: true, msg: `Unexpected error occurred, while fetching the user. ${e}` };
+        }
+    }
+
     public async getUser(): Promise<CustomResponse> {
         try {
             const { data, error } = await this.SupaBaseClient.auth.getUser()
@@ -103,8 +130,8 @@ export class SupabaseService {
                 error: false, data: data.user, msg: 'User Fetched Successfully'
             }
         }
-        catch {
-            return { error: true, msg: 'Unexpected error occurred, while fetching the user' };
+        catch (e) {
+            return { error: true, msg: `Unexpected error occurred, while fetching the user. ${e}` };
         }
     }
 }

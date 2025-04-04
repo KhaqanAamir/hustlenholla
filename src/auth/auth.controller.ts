@@ -1,14 +1,14 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserSignUpDto } from './dto/user-signup.dto';
 import { AuthBaseDto } from './dto/auth-base.dto';
+import { CustomResponse } from 'src/types/types';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
 
-    constructor(private readonly authService: AuthService) {
-
-    }
+    constructor(private readonly authService: AuthService) { }
 
     @Post('/sign-up')
     async signUp(
@@ -31,4 +31,29 @@ export class AuthController {
 
         return response
     }
+
+    @Post('/forgot-password')
+    async forgotPassword(@Body('email') email: string): Promise<CustomResponse> {
+
+        if (email.length === 0) {
+            return { error: false, msg: 'Please enter a valid email address' }
+        }
+        const response = await this.authService.forgotPassword(email)
+        if (response.error)
+            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
+
+        return response
+    }
+
+    @Patch('/reset-password')
+    async resetPassword(
+        @Body() resetPasswordDto: ResetPasswordDto
+    ) {
+        const response = await this.authService.resetPassword(resetPasswordDto)
+        if (response.error)
+            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
+
+        return response
+    }
+
 }
