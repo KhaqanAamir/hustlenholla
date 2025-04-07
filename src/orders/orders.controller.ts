@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { RequestedItemsDto } from './dto/requested-items.dto';
 import { CustomResponse } from 'src/types/types';
+import { UserGuard } from 'src/auth/guards/auth.guard';
+// import { DummyGuard } from 'src/auth/guards/dummy.guard';
 
 @Controller('orders')
 export class OrdersController {
@@ -77,5 +79,11 @@ export class OrdersController {
     addDiscount(percentage: number, total_amount: number): number {
         const discounted_price = (percentage / 100) * total_amount;
         return total_amount - discounted_price
+    }
+
+    @UseGuards(UserGuard)
+    @Get('/testing')
+    async test() {
+        return 'hello'
     }
 }

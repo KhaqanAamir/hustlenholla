@@ -36,8 +36,8 @@ import * as path from 'path';
         }
       }
     }),
-    SupabaseModule,
     AuthModule,
+    SupabaseModule,
     OrdersModule,
   ],
   controllers: [AppController],
