@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 
 @Module({
   controllers: [],
-  providers: [SupabaseService]
+  providers: [SupabaseService],
+  exports: [SupabaseService]
 })
 export class SupabaseModule { }

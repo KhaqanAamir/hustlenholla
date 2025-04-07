@@ -116,6 +116,44 @@ export type Database = {
           },
         ]
       }
+      user_otps: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: number
+          otp: string
+          purpose: Database["public"]["Enums"]["otp_purpose"]
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: number
+          otp: string
+          purpose: Database["public"]["Enums"]["otp_purpose"]
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: number
+          otp?: string
+          purpose?: Database["public"]["Enums"]["otp_purpose"]
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_otps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           created_at: string
@@ -155,6 +193,7 @@ export type Database = {
     }
     Enums: {
       order_category: "ZIPPER" | "ACCESSORIES"
+      otp_purpose: "login" | "forgot-password" | "email-verification"
       user_roles:
         | "SUPER_ADMIN"
         | "ORGANIZATIONAL_ADMIN"

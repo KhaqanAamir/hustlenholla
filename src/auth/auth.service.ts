@@ -4,12 +4,13 @@ import { CustomResponse } from 'src/types/types';
 import { UserSignUpDto } from './dto/user-signup.dto';
 import { AuthBaseDto } from './dto/auth-base.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
     private db: SupabaseService
 
-    constructor() {
+    constructor(private readonly mailService: MailerService) {
         this.db = new SupabaseService();
     }
 
@@ -65,14 +66,22 @@ export class AuthService {
         }
     }
 
-    async forgotPassword(email: string): Promise<CustomResponse> {
+    async forgotPassword(userId: string, email: string): Promise<CustomResponse> {
         try {
             const user = await this.db.getUser()
             if (user.data.email != email)
                 return { error: false, msg: 'Please enter the correct email address' }
 
-            const response = await this.db.resetPasswordForEmail(email)
-            return { error: response.error, msg: response.msg, data: response.data }
+            const forgotPasswordOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            // const otpResponse = await this.db.postData('user_otps',)
+            this.mailService.sendMail({
+                to: user.data.email,
+                template: 'forgot-password',
+                subject: 'Forgot Password OTP',
+                context: {
+                    forgotPasswordOtp
+                }
+            })
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
