@@ -5,6 +5,7 @@ import { UserSignUpDto } from './dto/user-signup.dto';
 import { AuthBaseDto } from './dto/auth-base.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { UserOtpInterface } from './interfaces/user-otp.interface';
 
 @Injectable()
 export class AuthService {
@@ -32,14 +33,6 @@ export class AuthService {
             if (signedUpResponse.error)
                 return { error: signedUpResponse.error, msg: signedUpResponse.msg, data: signedUpResponse.data }
 
-            await this.db.postData('users', {
-                id: signedUpResponse.data.id,
-                first_name: userSignUpDto.first_name,
-                last_name: userSignUpDto.last_name,
-                role: userSignUpDto.role,
-                email: userSignUpDto.email,
-            })
-
             return { error: signedUpResponse.error, msg: signedUpResponse.msg, data: signedUpResponse.data }
         }
         catch (e) {
@@ -66,20 +59,28 @@ export class AuthService {
         }
     }
 
-    async forgotPassword(userId: string, email: string): Promise<CustomResponse> {
+    async forgotPassword(email: string, otpPayLoad: UserOtpInterface): Promise<CustomResponse> {
         try {
-            const user = await this.db.getUser()
-            if (user.data.email != email)
-                return { error: false, msg: 'Please enter the correct email address' }
+            const user = await this.db.getUserByEmail(email)
 
-            const forgotPasswordOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            // const otpResponse = await this.db.postData('user_otps',)
+            if (!user.data) {
+                return user
+            }
+
+            otpPayLoad.user_id = user.data.id
+
+            // const otpResponse = await this.db.postData('user_otps', otpPayLoad)
+
+            // if (otpResponse.error) {
+            //     return otpResponse
+            // }
+
             this.mailService.sendMail({
                 to: user.data.email,
                 template: 'forgot-password',
                 subject: 'Forgot Password OTP',
                 context: {
-                    forgotPasswordOtp
+                    forgotPasswordOtp: otpPayLoad.otp
                 }
             })
         }
