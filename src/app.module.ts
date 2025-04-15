@@ -11,17 +11,15 @@ import * as path from 'path';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
     MailerModule.forRoot({
       transport: {
         host: process.env.MAIL_SERVER,
+        port: 465,
+        secure: false,
         auth: {
           user: process.env.MAIL_USERNAME,
           password: process.env.MAIL_PASSWORD
         },
-        port: Number(process.env.MAIL_PORT)
       },
       defaults: {
         from: 'Hustle-N-Hola'
@@ -36,6 +34,11 @@ import * as path from 'path';
         }
       }
     }),
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
+
     AuthModule,
     SupabaseModule,
     OrdersModule,

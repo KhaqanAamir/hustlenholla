@@ -1,0 +1,208 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("SUPABASE_URII")
+}
+
+model User{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  first_name String
+  last_name String
+  email String
+  role  USER_ROLE
+  items_cutting Item_Cutting[] @relation("workerDetails")
+  items_stitching Item_Stitching[] @relation("workerDetails")
+}
+
+model Orders{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  required_date DateTime @default(now())
+  supplier_name String
+  supplier_address String?
+  remarks String?
+  delivery_period Int?
+  status ORDER_STATUS @default(PENDING)
+  delivery_destination String
+  payment_terms String
+  freight_terms String
+  total_amount Int
+  sales_tax Int @default(0)
+  discount Int @default(0)
+  freight Int?
+  net_amount Int
+  items Order_Item[] @relation("orderItems")
+}
+
+model Order_Item{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  item_description String
+  item_code String
+  additional_specifications String?
+  status ORDER_ITEM_STATUS @default(CUTTING)
+  order_id Int
+  order Orders @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  category ORDER_CATEGORY
+  cutting Item_Cutting[] @relation("cuttingItem")
+  stitching Item_Stitching[] @relation("stitchingItem")
+  washing Item_Washing[] @relation("washingItem")
+  finishing Item_Finishing[] @relation("finishingItem")
+  quality_control Item_Quality_Control[] @relation("qualityCheckDetails")
+  packaging Item_Packaging[] @relation("packagingItem")
+  dispatched Item_Dispatch[] @relation("dispatchedItem")
+  unit String
+  quantity Int
+  rate Int
+  amount Int
+}
+
+model Item_Cutting{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(CUTTING_DEPT)
+  worker_id Int
+  worker User @relation("workerDetails", fields:[worker_id], references:[id], onUpdate: Cascade)
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("cuttingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+model Item_Stitching{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(STITCHING_DEPT)
+  worker_id Int
+  worker User @relation("workerDetails", fields:[worker_id], references:[id], onUpdate: Cascade)
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("stitchingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+
+model Item_Washing{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(WASHING_DEPT)
+  washing_details Json
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("washingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+model Item_Finishing{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(FINISHING_DEPT)
+  finishing_details Json
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("finishingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+model Item_Quality_Control{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(QUALITY_CONTROL_DEPT)
+  quality_check_details Json
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("qualityCheckDetails", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+model Item_Packaging{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(PACKAGING_DEPT)
+  order_details Json
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("packagingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+model Item_Dispatch{
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  start_date DateTime @default(now())
+  last_updated DateTime?
+  department DEPARTMENT @default(DISPATCHED_DEPT)
+  dispatching_details Json
+  operations Json
+  total_quantity Int
+  order_item_id Int
+  order_item Order_Item @relation("dispatchedItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+}
+
+// enums here
+
+enum USER_ROLE {
+  SUPER_ADMIN
+  ORGANIZATIONAL_ADMIN
+  PROCESS_MANAGER
+  EMPLOYEE
+}
+
+enum ORDER_CATEGORY{
+  ZIPPER
+  ACCESSORIES
+}
+
+enum OTP_PURPOSE{
+  LOGIN
+  FORGOT_PASSWORD
+  EMAIL_VERIFICATION
+}
+
+
+enum ORDER_STATUS{
+  PENDING
+  COMPLETED
+}
+
+enum ORDER_ITEM_STATUS{
+  CUTTING
+  STITCHING
+  WASHING
+  FINISHING
+  PACKAGING
+  DISPATCHED
+}
+
+enum DEPARTMENT{
+  CUTTING_DEPT
+  STITCHING_DEPT
+  WASHING_DEPT
+  FINISHING_DEPT
+  QUALITY_CONTROL_DEPT
+  PACKAGING_DEPT
+  DISPATCHED_DEPT
+}

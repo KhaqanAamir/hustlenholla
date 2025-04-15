@@ -8,6 +8,8 @@ import { pgToHttpErr } from 'src/types/utils';
 export class SupabaseService {
     private SupaBaseClient: SupabaseClient
 
+    private SupabaseAdmin: SupabaseClient
+
     constructor() {
         this.SupaBaseClient = createClient(
             process.env.SUPABASE_URL,
@@ -15,6 +17,11 @@ export class SupabaseService {
             {
                 global: { headers: { Authorization: `Bearer` } }
             }
+        )
+
+        this.SupabaseAdmin = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY,
         )
     }
     public getSupabaseClient(): SupabaseClient {
@@ -122,12 +129,31 @@ export class SupabaseService {
     public async getUser(): Promise<CustomResponse> {
         try {
             const { data, error } = await this.SupaBaseClient.auth.getUser()
-
             if (error)
                 return { error: true, msg: 'Failed to get user', details: error };
 
             return {
                 error: false, data: data.user, msg: 'User Fetched Successfully'
+            }
+        }
+        catch (e) {
+            return { error: true, msg: `Unexpected error occurred, while fetching the user. ${e}` };
+        }
+    }
+
+    public async getUserByEmail(email: string): Promise<CustomResponse> {
+        try {
+            const { data, error } = await this.SupabaseAdmin.auth.admin.listUsers();
+            if (error)
+                return { error: true, msg: 'Unable to get the list of users', details: error };
+
+            const user = data.users.find(u => u.email === email)
+            if (!user) {
+                return { error: false, msg: 'User not founds' }
+            }
+
+            return {
+                error: false, data: user, msg: 'User Fetched Successfully'
             }
         }
         catch (e) {

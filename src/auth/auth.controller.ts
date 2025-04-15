@@ -4,7 +4,8 @@ import { UserSignUpDto } from './dto/user-signup.dto';
 import { AuthBaseDto } from './dto/auth-base.dto';
 import { CustomResponse } from 'src/types/types';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UserGuard } from './guards/auth.guard';
+import { UserOtpInterface } from './interfaces/user-otp.interface';
+import { UserOtpEnum } from 'src/enums/user-otp.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -35,17 +36,27 @@ export class AuthController {
 
     @Post('/forgot-password')
     async forgotPassword(
-        @Req() req,
         @Body('email') email: string
     ): Promise<CustomResponse> {
 
         if (email.length === 0) {
             return { error: false, msg: 'Please enter a valid email address' }
         }
-        return
-        const response = await this.authService.forgotPassword(req.user.id, email)
-        if (response.error)
-            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
+        const forgotPasswordOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString()
+
+        const otpPayLoad: UserOtpInterface = {
+            user_id: '',
+            otp: forgotPasswordOtp,
+            expires_at: expires_at,
+            purpose: UserOtpEnum.FORGOT_PASSWORD,
+            used: false
+        }
+        const response = await this.authService.forgotPassword(email, otpPayLoad)
+
+        // if (response.error)
+        //     throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
 
         return response
     }
