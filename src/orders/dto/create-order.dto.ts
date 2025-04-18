@@ -1,14 +1,9 @@
 import { Transform, Type } from "class-transformer";
-import { IsArray, IsDate, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsArray, IsDate, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 import { RequestedItemsDto } from "./requested-items.dto";
 
 
 export class CreateOrderDto {
-
-    @IsNotEmpty()
-    @IsDate()
-    @Transform(({ value }) => new Date(value))
-    order_date: string
 
     @IsNotEmpty()
     @IsDate()
@@ -21,6 +16,10 @@ export class CreateOrderDto {
 
     @IsString()
     supplier_address: string
+
+    @IsString()
+    @IsEmail()
+    supplier_email: string
 
     @IsString()
     remarks: string

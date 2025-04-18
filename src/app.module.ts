@@ -8,6 +8,10 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { OrdersModule } from './orders/orders.module';
 import * as path from 'path';
+import { PrismaModule } from './prisma_service/prisma.module';
+import { CuttingModule } from './work-flow/cutting/cutting.module';
+import { StitchingModule } from './work-flow/stitching/stitching.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -42,6 +46,10 @@ import * as path from 'path';
     AuthModule,
     SupabaseModule,
     OrdersModule,
+    PrismaModule,
+    CuttingModule,
+    StitchingModule,
+    SupportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

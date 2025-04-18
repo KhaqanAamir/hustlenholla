@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { RequestedItemsDto } from './dto/requested-items.dto';
 import { CustomResponse } from 'src/types/types';
 import { UserGuard } from 'src/auth/guards/auth.guard';
+import { ORDER_STATUS, Prisma } from '@prisma/client';
+import { GetAllOrdersDto } from './dto/get-all-orders.dto';
 // import { DummyGuard } from 'src/auth/guards/dummy.guard';
 
 @Controller('orders')
@@ -17,49 +18,34 @@ export class OrdersController {
     async createOrder(
         @Body() createOrderDto: CreateOrderDto
     ): Promise<CustomResponse> {
-        const { requested_items, ...orderData } = createOrderDto;
 
         let total_amount: number = 0;
 
-        requested_items.forEach(item => {
+        createOrderDto.requested_items.forEach(item => {
             item.amount = this.calculateItemAmount(item.quantity, item.rate)
             total_amount += (item as any).amount
         })
 
         let net_amount: number = total_amount;
 
-        if (orderData.sales_tax > 0)
-            net_amount += this.addSalesTax(orderData.sales_tax, total_amount)
+        if (createOrderDto.sales_tax > 0)
+            net_amount += this.addSalesTax(createOrderDto.sales_tax, total_amount)
 
-        if (orderData.discount > 0)
-            net_amount += this.addDiscount(orderData.discount, total_amount)
+        if (createOrderDto.discount > 0)
+            net_amount += this.addDiscount(createOrderDto.discount, total_amount)
 
-        if (orderData.freight)
-            net_amount + orderData.freight
+        if (createOrderDto.freight)
+            net_amount + createOrderDto.freight
 
         createOrderDto.total_amount = total_amount
         createOrderDto.net_amount = net_amount
 
-        const orderCreatedResponse = await this.ordersService.createOrder(createOrderDto)
-
-        const itemsWithOrderId: RequestedItemsDto[] = requested_items.map((item) => ({
-            ...item,
-            order_id: Number(orderCreatedResponse.data[0].id)
-        }))
-
-        const requestedItemsResponse = await this.createRequestedItems(itemsWithOrderId)
-        if (requestedItemsResponse.error)
-            return requestedItemsResponse
-
-        return {
-            error: false,
-            msg: 'Order Created Successfully'
-        }
+        return await this.ordersService.createOrder(createOrderDto)
 
     }
 
     // the below function will upload record on requested_items table
-    createRequestedItems(requestedItems: RequestedItemsDto[]): Promise<CustomResponse> {
+    createRequestedItems(requestedItems: Prisma.Order_ItemCreateInput[]): Promise<CustomResponse> {
         return this.ordersService.createRequestedItems(requestedItems)
     }
 
@@ -85,5 +71,62 @@ export class OrdersController {
     @Get('/testing')
     async test() {
         return 'hello'
+    }
+
+    @Get('/assigned-orders')
+    async totalOrders() {
+        return await this.ordersService.totalOrders()
+    }
+
+    @Get('/pending-orders')
+    async pendingOrders() {
+        return await this.ordersService.pendingOrders()
+    }
+
+    @Get('/completed-orders')
+    async completedOrders() {
+        return await this.ordersService.completedOrders()
+    }
+
+    // added pagination, and ilike filter on item_description,, if any other filter needed will add later
+    @Get('/get-all-orders')
+    async getAllOrders(
+        @Query() query: GetAllOrdersDto
+    ) {
+        const where = query.query ? {
+            item_description: {
+                contains: query.query || '',
+                mode: 'insensitive'
+            }
+        }
+            : {}
+        const skip = query.page_no && query.page_size ? (+query.page_no - 1) * +query.page_size : 0
+        const take = query.page_size ? +query.page_size : 10
+
+        return await this.ordersService.getAllOrders({ where, skip, take })
+    }
+
+    @Get('/get-single-order/:order_Id')
+    async getOrderDetails() {
+
+    }
+
+    @Get('/completed/today')
+    async checkOrderCompletion(
+    ) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date();
+        endOfDay.setHours(23, 59, 59, 999)
+
+        const where = {
+            completed_at: {
+                gte: startOfDay,
+                lte: endOfDay
+            },
+            status: ORDER_STATUS.COMPLETED
+        }
+        return await this.ordersService.checkOrderCompletion({ where })
     }
 }

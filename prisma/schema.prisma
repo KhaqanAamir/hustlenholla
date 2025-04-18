@@ -1,168 +1,178 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["omitApi"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("SUPABASE_URII")
+  url      = env("SUPABASE_URI")
 }
 
-model User{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  first_name String
-  last_name String
-  email String
-  role  USER_ROLE
-  items_cutting Item_Cutting[] @relation("workerDetails")
+model User {
+  id              Int              @id @default(autoincrement())
+  created_at      DateTime         @default(now())
+  email           String
+  first_name      String
+  last_name       String
+  role            USER_ROLE
+  password        String
+  items_cutting   Item_Cutting[]   @relation("workerDetails")
   items_stitching Item_Stitching[] @relation("workerDetails")
 }
 
-model Orders{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  required_date DateTime @default(now())
-  supplier_name String
-  supplier_address String?
-  remarks String?
-  delivery_period Int?
-  status ORDER_STATUS @default(PENDING)
+model Orders {
+  id                   Int          @id @default(autoincrement())
+  created_at           DateTime     @default(now())
+  required_date        DateTime     @default(now())
+  updated_at           DateTime     @updatedAt
+  completed_at         DateTime?
+  supplier_name        String
+  supplier_address     String?
+  supplier_email       String
+  remarks              String?
+  delivery_period      Int?
+  status               ORDER_STATUS @default(PENDING)
   delivery_destination String
-  payment_terms String
-  freight_terms String
-  total_amount Int
-  sales_tax Int @default(0)
-  discount Int @default(0)
-  freight Int?
-  net_amount Int
-  items Order_Item[] @relation("orderItems")
+  payment_terms        String
+  freight_terms        String
+  total_amount         Int
+  sales_tax            Int          @default(0)
+  discount             Int          @default(0)
+  freight              Int?
+  net_amount           Int
+  items                Order_Item[] @relation("orderItems")
 }
 
-model Order_Item{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  item_description String
-  item_code String
+model Order_Item {
+  id                        Int                      @id @default(autoincrement())
+  created_at                DateTime                 @default(now())
+  item_description          String
+  item_code                 String
   additional_specifications String?
-  status ORDER_ITEM_STATUS @default(CUTTING)
-  order_id Int
-  order Orders @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  category ORDER_CATEGORY
-  cutting Item_Cutting[] @relation("cuttingItem")
-  stitching Item_Stitching[] @relation("stitchingItem")
-  washing Item_Washing[] @relation("washingItem")
-  finishing Item_Finishing[] @relation("finishingItem")
-  quality_control Item_Quality_Control[] @relation("qualityCheckDetails")
-  packaging Item_Packaging[] @relation("packagingItem")
-  dispatched Item_Dispatch[] @relation("dispatchedItem")
-  unit String
-  quantity Int
-  rate Int
-  amount Int
+  status                    ORDER_ITEM_STATUS        @default(PENDING)
+  current_process           ORDER_ITEM_CURRENT_STAGE @default(CUTTING)
+  order_id                  Int
+  category                  ORDER_CATEGORY
+  unit                      String
+  quantity                  Int
+  rate                      Int
+  amount                    Int
+  cutting                   Item_Cutting[]           @relation("cuttingItem")
+  dispatched                Item_Dispatch[]          @relation("dispatchedItem")
+  finishing                 Item_Finishing[]         @relation("finishingItem")
+  packaging                 Item_Packaging[]         @relation("packagingItem")
+  quality_control           Item_Quality_Control[]   @relation("qualityCheckDetails")
+  stitching                 Item_Stitching[]         @relation("stitchingItem")
+  washing                   Item_Washing[]           @relation("washingItem")
+  order                     Orders                   @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade)
 }
 
-model Item_Cutting{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(CUTTING_DEPT)
-  worker_id Int
-  worker User @relation("workerDetails", fields:[worker_id], references:[id], onUpdate: Cascade)
-  operations Json
+model Item_Cutting {
+  id             Int            @id @default(autoincrement())
+  created_at     DateTime       @default(now())
+  start_date     DateTime       @default(now())
+  last_updated   DateTime?
+  department     DEPARTMENT     @default(CUTTING_DEPT)
+  status         CUTTING_STATUS @default(RAW_MATERIALS_ISSUED)
+  worker_id      Int
+  operations     Json
   total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("cuttingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  order_item_id  Int
+  order_item     Order_Item     @relation("cuttingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
+  worker         User           @relation("workerDetails", fields: [worker_id], references: [id])
 }
 
-model Item_Stitching{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(STITCHING_DEPT)
-  worker_id Int
-  worker User @relation("workerDetails", fields:[worker_id], references:[id], onUpdate: Cascade)
-  operations Json
+model Item_Stitching {
+  id             Int              @id @default(autoincrement())
+  created_at     DateTime         @default(now())
+  start_date     DateTime         @default(now())
+  last_updated   DateTime?
+  department     DEPARTMENT       @default(STITCHING_DEPT)
+  status         STITCHING_STATUS @default(RAW_MATERIALS_ISSUED)
+  worker_id      Int
+  operations     Json
   total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("stitchingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  order_item_id  Int
+  order_item     Order_Item       @relation("stitchingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
+  worker         User             @relation("workerDetails", fields: [worker_id], references: [id])
 }
 
-
-model Item_Washing{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(WASHING_DEPT)
+model Item_Washing {
+  id              Int            @id @default(autoincrement())
+  created_at      DateTime       @default(now())
+  start_date      DateTime       @default(now())
+  last_updated    DateTime?
+  department      DEPARTMENT     @default(WASHING_DEPT)
+  status          WASHING_STATUS @default(PRODUCT_OUTSOURCED)
   washing_details Json
-  operations Json
-  total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("washingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  operations      Json
+  total_quantity  Int
+  order_item_id   Int
+  order_item      Order_Item     @relation("washingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
-model Item_Finishing{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(FINISHING_DEPT)
+model Item_Finishing {
+  id                Int              @id @default(autoincrement())
+  created_at        DateTime         @default(now())
+  start_date        DateTime         @default(now())
+  last_updated      DateTime?
+  department        DEPARTMENT       @default(FINISHING_DEPT)
+  status            FINISHING_STATUS @default(RAW_MATERIALS_ISSUED)
   finishing_details Json
-  operations Json
-  total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("finishingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  operations        Json
+  total_quantity    Int
+  order_item_id     Int
+  order_item        Order_Item       @relation("finishingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
-model Item_Quality_Control{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(QUALITY_CONTROL_DEPT)
+model Item_Quality_Control {
+  id                    Int                    @id @default(autoincrement())
+  created_at            DateTime               @default(now())
+  start_date            DateTime               @default(now())
+  last_updated          DateTime?
+  department            DEPARTMENT             @default(QUALITY_CONTROL_DEPT)
+  status                QUALITY_CONTROL_STATUS @default(RAW_MATERIALS_ISSUED)
   quality_check_details Json
-  operations Json
-  total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("qualityCheckDetails", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  operations            Json
+  total_quantity        Int
+  order_item_id         Int
+  order_item            Order_Item             @relation("qualityCheckDetails", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
-model Item_Packaging{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(PACKAGING_DEPT)
-  order_details Json
-  operations Json
+model Item_Packaging {
+  id             Int            @id @default(autoincrement())
+  created_at     DateTime       @default(now())
+  start_date     DateTime       @default(now())
+  last_updated   DateTime?
+  department     DEPARTMENT     @default(PACKAGING_DEPT)
+  status         PACKING_STATUS @default(RAW_MATERIALS_ISSUED)
+  order_details  Json
+  operations     Json
   total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("packagingItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  order_item_id  Int
+  order_item     Order_Item     @relation("packagingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
-model Item_Dispatch{
-  id Int @id @default(autoincrement())
-  created_at DateTime @default(now())
-  start_date DateTime @default(now())
-  last_updated DateTime?
-  department DEPARTMENT @default(DISPATCHED_DEPT)
+model Item_Dispatch {
+  id                  Int                @id @default(autoincrement())
+  created_at          DateTime           @default(now())
+  start_date          DateTime           @default(now())
+  last_updated        DateTime?
+  department          DEPARTMENT         @default(DISPATCHED_DEPT)
+  status              DISPATCHING_STATUS @default(RAW_MATERIALS_ISSUED)
   dispatching_details Json
-  operations Json
-  total_quantity Int
-  order_item_id Int
-  order_item Order_Item @relation("dispatchedItem", fields:[order_item_id], references:[id], onDelete:Cascade, onUpdate:Cascade)
+  operations          Json
+  total_quantity      Int
+  order_item_id       Int
+  order_item          Order_Item         @relation("dispatchedItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
-// enums here
+model Customer_Issue {
+  id             Int      @id @default(autoincrement())
+  created_at     DateTime @default(now())
+  customer_email String
+  description    String
+}
 
 enum USER_ROLE {
   SUPER_ADMIN
@@ -171,24 +181,28 @@ enum USER_ROLE {
   EMPLOYEE
 }
 
-enum ORDER_CATEGORY{
+enum ORDER_CATEGORY {
   ZIPPER
   ACCESSORIES
 }
 
-enum OTP_PURPOSE{
+enum OTP_PURPOSE {
   LOGIN
   FORGOT_PASSWORD
   EMAIL_VERIFICATION
 }
 
-
-enum ORDER_STATUS{
+enum ORDER_STATUS {
   PENDING
   COMPLETED
 }
 
-enum ORDER_ITEM_STATUS{
+enum ORDER_ITEM_STATUS {
+  PENDING
+  COMPLETED
+}
+
+enum ORDER_ITEM_CURRENT_STAGE {
   CUTTING
   STITCHING
   WASHING
@@ -197,7 +211,42 @@ enum ORDER_ITEM_STATUS{
   DISPATCHED
 }
 
-enum DEPARTMENT{
+enum CUTTING_STATUS {
+  RAW_MATERIALS_ISSUED
+  COMPLETED
+}
+
+enum STITCHING_STATUS {
+  RAW_MATERIALS_ISSUED
+  COMPLETED
+}
+
+enum WASHING_STATUS {
+  PRODUCT_OUTSOURCED
+  COMPLETED
+}
+
+enum FINISHING_STATUS {
+  RAW_MATERIALS_ISSUED
+  COMPLETED
+}
+
+enum QUALITY_CONTROL_STATUS {
+  RAW_MATERIALS_ISSUED
+  COMPLETED
+}
+
+enum PACKING_STATUS {
+  RAW_MATERIALS_ISSUED
+  COMPLETED
+}
+
+enum DISPATCHING_STATUS {
+  RAW_MATERIALS_ISSUED
+  COMPLETED
+}
+
+enum DEPARTMENT {
   CUTTING_DEPT
   STITCHING_DEPT
   WASHING_DEPT
