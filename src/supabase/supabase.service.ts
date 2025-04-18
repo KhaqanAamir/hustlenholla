@@ -141,23 +141,23 @@ export class SupabaseService {
         }
     }
 
-    public async getUserByEmail(email: string): Promise<CustomResponse> {
-        try {
-            const { data, error } = await this.SupabaseAdmin.auth.admin.listUsers();
-            if (error)
-                return { error: true, msg: 'Unable to get the list of users', details: error };
+    // public async getUserByEmail(email: string): Promise<CustomResponse> {
+    //     try {
+    //         const { data, error } = await this.SupabaseAdmin.auth.admin.listUsers();
+    //         if (error)
+    //             return { error: true, msg: 'Unable to get the list of users', details: error };
 
-            const user = data.users.find(u => u.email === email)
-            if (!user) {
-                return { error: false, msg: 'User not founds' }
-            }
+    //         const user = data.users.find(u => u.email === email)
+    //         if (!user) {
+    //             return { error: false, msg: 'User not founds' }
+    //         }
 
-            return {
-                error: false, data: user, msg: 'User Fetched Successfully'
-            }
-        }
-        catch (e) {
-            return { error: true, msg: `Unexpected error occurred, while fetching the user. ${e}` };
-        }
-    }
+    //         return {
+    //             error: false, data: user, msg: 'User Fetched Successfully'
+    //         }
+    //     }
+    //     catch (e) {
+    //         return { error: true, msg: `Unexpected error occurred, while fetching the user. ${e}` };
+    //     }
+    // }
 }
