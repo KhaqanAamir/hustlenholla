@@ -50,7 +50,7 @@ export class OrdersService {
         }
     }
 
-    async totalOrders(): Promise<CustomResponse> {
+    async totalWorkOrders(): Promise<CustomResponse> {
         try {
             const totalOrdersResponse = await this.prisma.getData('orders', 'findMany')
             if (totalOrdersResponse.error || !totalOrdersResponse.data)
@@ -65,7 +65,7 @@ export class OrdersService {
         }
     }
 
-    async pendingOrders(): Promise<CustomResponse> {
+    async pendingWorkOrders(): Promise<CustomResponse> {
         try {
             const pendingOrdersResponse = await this.prisma.getData('orders', 'findMany', {
                 where: {
@@ -84,7 +84,7 @@ export class OrdersService {
         }
     }
 
-    async completedOrders(): Promise<CustomResponse> {
+    async completedWorkOrders(): Promise<CustomResponse> {
         try {
             const completedOrdersResponse = await this.prisma.getData('orders', 'findMany', {
                 where: {
@@ -103,7 +103,7 @@ export class OrdersService {
         }
     }
 
-    async getAllOrders(
+    async getAllWorkOrders(
         { where, skip, take }
     ): Promise<CustomResponse> {
         try {
@@ -160,8 +160,9 @@ export class OrdersService {
         }
     }
 
-    async getOrderDetails(orderId: number): Promise<CustomResponse> {
+    async getWorkOrderDetails(orderId: number): Promise<CustomResponse> {
         try {
+            const allStages = [];
             const getOrderResponse = await this.prisma.getData('order_Item', 'findUnique', {
                 where: { id: orderId },
                 include: {
@@ -174,8 +175,52 @@ export class OrdersService {
                     dispatched: true
                 }
             })
+
             if (getOrderResponse.error || !getOrderResponse.data)
                 return getOrderResponse
+
+            const stageMap = {
+                cutting: getOrderResponse.data.cutting,
+                stitching: getOrderResponse.data.stitching,
+                washing: getOrderResponse.data.washing,
+                finishing: getOrderResponse.data.finishing,
+                quality_control: getOrderResponse.data.quality_control,
+                packaging: getOrderResponse.data.packaging,
+                dispatched: getOrderResponse.data.dispatched,
+            }
+
+            for (const [stageName, stageEnteries] of Object.entries(stageMap)) {
+                for (const entry of stageEnteries) {
+                    allStages.push({
+                        stage: stageName,
+                        start_date: entry.start_date,
+                        completed_at: entry.completed_at
+                    })
+                }
+                if (stageEnteries.length === 0) {
+                    allStages.push({
+                        stage: stageName,
+                        start_date: null,
+                        completed_at: null
+                    })
+                }
+            }
+
+            const sortedStages = allStages.sort((a, b) => {
+                const dateA = a.start_date ? new Date(a.start_date).getTime() : 0
+                const dateB = b.start_date ? new Date(b.start_date).getTime() : 0
+                return dateA - dateB
+            })
+
+            delete getOrderResponse.data.cutting
+            delete getOrderResponse.data.stitching
+            delete getOrderResponse.data.washing
+            delete getOrderResponse.data.finishing
+            delete getOrderResponse.data.quality_control
+            delete getOrderResponse.data.packaging
+            delete getOrderResponse.data.dispatched
+
+            getOrderResponse.data.time_line = sortedStages
 
             return getOrderResponse
         }
@@ -183,4 +228,6 @@ export class OrdersService {
             return { error: true, msg: `Inernal server error occured, ${e}` }
         }
     }
+
+
 }

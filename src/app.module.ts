@@ -12,6 +12,9 @@ import { PrismaModule } from './prisma_service/prisma.module';
 import { CuttingModule } from './work-flow/cutting/cutting.module';
 import { StitchingModule } from './work-flow/stitching/stitching.module';
 import { SupportModule } from './support/support.module';
+import { WashingModule } from './work-flow/washing/washing.module';
+import { FinishingModule } from './work-flow/finishing/finishing.module';
+import { DispatchModule } from './work-flow/dispatch/dispatch.module';
 
 @Module({
   imports: [
@@ -50,6 +53,9 @@ import { SupportModule } from './support/support.module';
     CuttingModule,
     StitchingModule,
     SupportModule,
+    WashingModule,
+    FinishingModule,
+    DispatchModule,
   ],
   controllers: [AppController],
   providers: [AppService],

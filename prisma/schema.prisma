@@ -79,7 +79,7 @@ model Item_Cutting {
   worker_id      Int?
   operations     Json?
   total_quantity Int?
-  order_item_id  Int
+  order_item_id  Int            @unique
   order_item     Order_Item     @relation("cuttingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
   worker         User?          @relation("workerDetails", fields: [worker_id], references: [id])
 }
@@ -89,14 +89,16 @@ model Item_Stitching {
   created_at     DateTime         @default(now())
   start_date     DateTime         @default(now())
   last_updated   DateTime         @updatedAt
+  completed_at   DateTime?
   department     DEPARTMENT       @default(STITCHING_DEPT)
   status         STITCHING_STATUS @default(RAW_MATERIALS_ISSUED)
-  worker_id      Int
-  operations     Json
-  total_quantity Int
-  order_item_id  Int
+  piece_rate     Int?
+  worker_id      Int?
+  operations     Json?
+  total_quantity Int?
+  order_item_id  Int              @unique
   order_item     Order_Item       @relation("stitchingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
-  worker         User             @relation("workerDetails", fields: [worker_id], references: [id])
+  worker         User?            @relation("workerDetails", fields: [worker_id], references: [id])
 }
 
 model Item_Washing {
@@ -104,12 +106,13 @@ model Item_Washing {
   created_at      DateTime       @default(now())
   start_date      DateTime       @default(now())
   last_updated    DateTime       @updatedAt
+  completed_at    DateTime?
   department      DEPARTMENT     @default(WASHING_DEPT)
   status          WASHING_STATUS @default(PRODUCT_OUTSOURCED)
-  washing_details Json
-  operations      Json
-  total_quantity  Int
-  order_item_id   Int
+  washing_details Json?
+  operations      Json?
+  total_quantity  Int?
+  order_item_id   Int            @unique
   order_item      Order_Item     @relation("washingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
@@ -118,12 +121,13 @@ model Item_Finishing {
   created_at        DateTime         @default(now())
   start_date        DateTime         @default(now())
   last_updated      DateTime         @updatedAt
+  completed_at      DateTime?
   department        DEPARTMENT       @default(FINISHING_DEPT)
   status            FINISHING_STATUS @default(RAW_MATERIALS_ISSUED)
-  finishing_details Json
-  operations        Json
-  total_quantity    Int
-  order_item_id     Int
+  finishing_details Json?
+  operations        Json?
+  total_quantity    Int?
+  order_item_id     Int              @unique
   order_item        Order_Item       @relation("finishingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
@@ -137,7 +141,7 @@ model Item_Quality_Control {
   quality_check_details Json
   operations            Json
   total_quantity        Int
-  order_item_id         Int
+  order_item_id         Int                    @unique
   order_item            Order_Item             @relation("qualityCheckDetails", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
@@ -151,7 +155,7 @@ model Item_Packaging {
   order_details  Json
   operations     Json
   total_quantity Int
-  order_item_id  Int
+  order_item_id  Int            @unique
   order_item     Order_Item     @relation("packagingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
@@ -165,7 +169,7 @@ model Item_Dispatch {
   dispatching_details Json
   operations          Json
   total_quantity      Int
-  order_item_id       Int
+  order_item_id       Int                @unique
   order_item          Order_Item         @relation("dispatchedItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
