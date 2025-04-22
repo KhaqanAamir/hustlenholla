@@ -2,12 +2,9 @@ import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { SupabaseModule } from 'src/supabase/supabase.module';
-import { SupabaseStrategy } from './strategies/supabase.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma_service/prisma.service';
-
-
+import { AuthStrategy } from './strategies/auth.strategy';
 
 @Module({
   imports: [
@@ -18,7 +15,6 @@ import { PrismaService } from 'src/prisma_service/prisma.service';
     }),
     SupabaseModule],
   controllers: [AuthController],
-  providers: [AuthService, SupabaseStrategy],
-  exports: [SupabaseStrategy, JwtModule]
+  providers: [AuthService, AuthStrategy]
 })
 export class AuthModule { }

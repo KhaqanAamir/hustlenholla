@@ -159,4 +159,28 @@ export class OrdersService {
             return { error: true, msg: `Inernal server error occured, ${e}` }
         }
     }
+
+    async getOrderDetails(orderId: number): Promise<CustomResponse> {
+        try {
+            const getOrderResponse = await this.prisma.getData('order_Item', 'findUnique', {
+                where: { id: orderId },
+                include: {
+                    cutting: true,
+                    stitching: true,
+                    washing: true,
+                    finishing: true,
+                    quality_control: true,
+                    packaging: true,
+                    dispatched: true
+                }
+            })
+            if (getOrderResponse.error || !getOrderResponse.data)
+                return getOrderResponse
+
+            return getOrderResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
 }

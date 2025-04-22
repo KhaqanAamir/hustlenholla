@@ -37,7 +37,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         dataToPost: InputType
     ): Promise<CustomResponse> {
         try {
-
             //@ts-ignore
             const result = await this[modelName][method]({
                 data: dataToPost
@@ -90,6 +89,39 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
                 status: HttpStatus.OK,
             };
         } catch (e) {
+            return {
+                error: true,
+                msg: `Error fetching data from ${String(modelName)}: ${e.message}`,
+                data: null,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+            };
+        }
+    }
+
+    async updateData<
+        T extends keyof PrismaClient,
+        M extends 'update' | 'updateMany',
+        InputType = T extends keyof PrismaClient
+        ? PrismaClient[T] extends { [K in M]: (args: infer A) => any }
+        ? A
+        : never
+        : never
+    >(
+        modelName: T,
+        method: M,
+        dataToUpdate: InputType
+    ): Promise<CustomResponse> {
+        try {
+            //@ts-ignore
+            const result = await this[modelName][method](dataToUpdate)
+            return {
+                error: false,
+                msg: `Data successfully inserted into ${String(modelName)}`,
+                data: result,
+                status: HttpStatus.OK,
+            };
+        }
+        catch (e) {
             return {
                 error: true,
                 msg: `Error fetching data from ${String(modelName)}: ${e.message}`,

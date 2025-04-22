@@ -14,7 +14,6 @@ export class SupabaseStrategy extends PassportStrategy(Strategy, 'auth') {
       secretOrKey: process.env.SUPABASE_JWT_SECRET,
       passReqToCallback: true
     });
-
     this.supabase = supabaseService.getSupabaseClient()
   }
 

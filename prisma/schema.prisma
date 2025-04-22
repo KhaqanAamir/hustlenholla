@@ -71,22 +71,24 @@ model Item_Cutting {
   id             Int            @id @default(autoincrement())
   created_at     DateTime       @default(now())
   start_date     DateTime       @default(now())
-  last_updated   DateTime?
+  last_updated   DateTime       @updatedAt
+  completed_at   DateTime?
   department     DEPARTMENT     @default(CUTTING_DEPT)
   status         CUTTING_STATUS @default(RAW_MATERIALS_ISSUED)
-  worker_id      Int
-  operations     Json
-  total_quantity Int
+  piece_rate     Int?
+  worker_id      Int?
+  operations     Json?
+  total_quantity Int?
   order_item_id  Int
   order_item     Order_Item     @relation("cuttingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
-  worker         User           @relation("workerDetails", fields: [worker_id], references: [id])
+  worker         User?          @relation("workerDetails", fields: [worker_id], references: [id])
 }
 
 model Item_Stitching {
   id             Int              @id @default(autoincrement())
   created_at     DateTime         @default(now())
   start_date     DateTime         @default(now())
-  last_updated   DateTime?
+  last_updated   DateTime         @updatedAt
   department     DEPARTMENT       @default(STITCHING_DEPT)
   status         STITCHING_STATUS @default(RAW_MATERIALS_ISSUED)
   worker_id      Int
@@ -101,7 +103,7 @@ model Item_Washing {
   id              Int            @id @default(autoincrement())
   created_at      DateTime       @default(now())
   start_date      DateTime       @default(now())
-  last_updated    DateTime?
+  last_updated    DateTime       @updatedAt
   department      DEPARTMENT     @default(WASHING_DEPT)
   status          WASHING_STATUS @default(PRODUCT_OUTSOURCED)
   washing_details Json
@@ -115,7 +117,7 @@ model Item_Finishing {
   id                Int              @id @default(autoincrement())
   created_at        DateTime         @default(now())
   start_date        DateTime         @default(now())
-  last_updated      DateTime?
+  last_updated      DateTime         @updatedAt
   department        DEPARTMENT       @default(FINISHING_DEPT)
   status            FINISHING_STATUS @default(RAW_MATERIALS_ISSUED)
   finishing_details Json
@@ -129,7 +131,7 @@ model Item_Quality_Control {
   id                    Int                    @id @default(autoincrement())
   created_at            DateTime               @default(now())
   start_date            DateTime               @default(now())
-  last_updated          DateTime?
+  last_updated          DateTime               @updatedAt
   department            DEPARTMENT             @default(QUALITY_CONTROL_DEPT)
   status                QUALITY_CONTROL_STATUS @default(RAW_MATERIALS_ISSUED)
   quality_check_details Json
@@ -143,7 +145,7 @@ model Item_Packaging {
   id             Int            @id @default(autoincrement())
   created_at     DateTime       @default(now())
   start_date     DateTime       @default(now())
-  last_updated   DateTime?
+  last_updated   DateTime       @updatedAt
   department     DEPARTMENT     @default(PACKAGING_DEPT)
   status         PACKING_STATUS @default(RAW_MATERIALS_ISSUED)
   order_details  Json
@@ -157,7 +159,7 @@ model Item_Dispatch {
   id                  Int                @id @default(autoincrement())
   created_at          DateTime           @default(now())
   start_date          DateTime           @default(now())
-  last_updated        DateTime?
+  last_updated        DateTime           @updatedAt
   department          DEPARTMENT         @default(DISPATCHED_DEPT)
   status              DISPATCHING_STATUS @default(RAW_MATERIALS_ISSUED)
   dispatching_details Json
