@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma_service/prisma.service';
 import { CustomResponse } from 'src/types/types';
 import { UpdateCuttingDto } from './dtos/update-cutting.dto';
-import { CUTTING_STATUS } from '@prisma/client';
+import { CUTTING_STATUS, ORDER_ITEM_CURRENT_STAGE } from '@prisma/client';
 
 @Injectable()
 export class CuttingService {
@@ -12,20 +12,36 @@ export class CuttingService {
 
     async startCutting(orderItemId: number): Promise<CustomResponse> {
         try {
-            const createCuttingResponse = await this.prisma.postData('item_Cutting', 'create', {
-                order_item_id: orderItemId
-            })
 
-            return createCuttingResponse
+            const [createCuttingResponse, updateOrderItemResponse] = await this.prisma.$transaction([
+                this.prisma.item_Cutting.create({
+                    data: {
+                        order_item_id: orderItemId
+                    }
+                }),
+                this.prisma.order_Item.update({
+                    where: { id: orderItemId },
+                    data: {
+                        current_process: ORDER_ITEM_CURRENT_STAGE.CUTTING
+                    }
+                })
+            ]);
+
+            return { error: false, msg: "Cutting stage started", data: createCuttingResponse };
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
         }
     }
 
-    async getSingleCuttingItem(cuttingItemId: number): Promise<CustomResponse> {
+    async getSingleCuttingItem(orderItemId: number): Promise<CustomResponse> {
         try {
-            const singleRecordResponse = await this.prisma.getData('item_Cutting', 'findFirst', { where: { order_item_id: cuttingItemId }, include: { order_item: { include: { order: { select: { required_date: true } } } } } })
+            const singleRecordResponse = await this.prisma.getData('item_Cutting', 'findFirst', {
+                where: { order_item_id: orderItemId },
+                include: {
+                    order_item: { include: { order: { select: { required_date: true } } } }
+                }
+            })
 
             if (singleRecordResponse.error || !singleRecordResponse.data)
                 return singleRecordResponse
@@ -39,6 +55,9 @@ export class CuttingService {
                     status: singleRecordResponse.data.order_item.status
                 },
             }
+
+            delete singleRecordResponse.data.completed_at
+            delete singleRecordResponse.data.status
 
             return singleRecordResponse
         }

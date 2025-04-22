@@ -2,11 +2,8 @@ import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nest
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
-import { UserGuard } from 'src/auth/guards/auth.guard';
 import { ORDER_STATUS, Prisma, USER_ROLE } from '@prisma/client';
 import { GetAllOrdersDto } from './dto/get-all-orders.dto';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { RoleGuard } from 'src/auth/guards/role.guard';
 // import { DummyGuard } from 'src/auth/guards/dummy.guard';
 
 @Controller('orders')
@@ -69,32 +66,23 @@ export class OrdersController {
         return total_amount - discounted_price
     }
 
-    @Roles(USER_ROLE.SUPER_ADMIN)
-    @UseGuards(UserGuard, RoleGuard)
-    @Get('/testing')
-    async test(
-        @Req() req
-    ) {
-        return 'hello'
+    @Get('/assigned-work-orders')
+    async totalWorkOrders() {
+        return await this.ordersService.totalWorkOrders()
     }
 
-    @Get('/assigned-orders')
-    async totalOrders() {
-        return await this.ordersService.totalOrders()
+    @Get('/pending-work-orders')
+    async pendingWorkOrders() {
+        return await this.ordersService.pendingWorkOrders()
     }
 
-    @Get('/pending-orders')
-    async pendingOrders() {
-        return await this.ordersService.pendingOrders()
+    @Get('/completed-work-orders')
+    async completedWorkOrders() {
+        return await this.ordersService.completedWorkOrders()
     }
 
-    @Get('/completed-orders')
-    async completedOrders() {
-        return await this.ordersService.completedOrders()
-    }
-
-    @Get('/get-all-orders')
-    async getAllOrders(
+    @Get('/get-all-work-orders')
+    async getAllWorkOrders(
         @Query() query: GetAllOrdersDto
     ) {
         const where = query.query ? {
@@ -108,14 +96,14 @@ export class OrdersController {
         const skip = query.page_no && query.page_size ? (+query.page_no - 1) * +query.page_size : 0
         const take = query.page_size ? +query.page_size : 10
 
-        return await this.ordersService.getAllOrders({ where, skip, take })
+        return await this.ordersService.getAllWorkOrders({ where, skip, take })
     }
 
-    @Get('/get-single-order/:order_Id')
-    async getOrderDetails(
+    @Get('/get-single-work-order/:order_Id')
+    async getWorkOrderDetails(
         @Param('order_Id') orderId: string
     ) {
-        return await this.ordersService.getOrderDetails(+orderId)
+        return await this.ordersService.getWorkOrderDetails(+orderId)
     }
 
     @Get('/completed/today')
