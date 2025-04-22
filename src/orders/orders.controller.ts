@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
 import { UserGuard } from 'src/auth/guards/auth.guard';
-import { ORDER_STATUS, Prisma } from '@prisma/client';
+import { ORDER_STATUS, Prisma, USER_ROLE } from '@prisma/client';
 import { GetAllOrdersDto } from './dto/get-all-orders.dto';
+import { Roles } from 'src/auth/decorator/roles.decorator';
+import { RoleGuard } from 'src/auth/guards/role.guard';
 // import { DummyGuard } from 'src/auth/guards/dummy.guard';
 
 @Controller('orders')
@@ -67,9 +69,12 @@ export class OrdersController {
         return total_amount - discounted_price
     }
 
-    @UseGuards(UserGuard)
+    @Roles(USER_ROLE.SUPER_ADMIN)
+    @UseGuards(UserGuard, RoleGuard)
     @Get('/testing')
-    async test() {
+    async test(
+        @Req() req
+    ) {
         return 'hello'
     }
 
@@ -88,7 +93,6 @@ export class OrdersController {
         return await this.ordersService.completedOrders()
     }
 
-    // added pagination, and ilike filter on item_description,, if any other filter needed will add later
     @Get('/get-all-orders')
     async getAllOrders(
         @Query() query: GetAllOrdersDto
@@ -97,7 +101,8 @@ export class OrdersController {
             item_description: {
                 contains: query.query || '',
                 mode: 'insensitive'
-            }
+            },
+            current_process: query.process
         }
             : {}
         const skip = query.page_no && query.page_size ? (+query.page_no - 1) * +query.page_size : 0
@@ -107,8 +112,10 @@ export class OrdersController {
     }
 
     @Get('/get-single-order/:order_Id')
-    async getOrderDetails() {
-
+    async getOrderDetails(
+        @Param('order_Id') orderId: string
+    ) {
+        return await this.ordersService.getOrderDetails(+orderId)
     }
 
     @Get('/completed/today')

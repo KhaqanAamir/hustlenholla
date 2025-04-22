@@ -52,10 +52,9 @@ export class AuthService {
         { email, password }: AuthBaseDto
     ): Promise<CustomResponse> {
         try {
-            const signedInResponse = await this.prisma.getData('user', 'findFirst', { where: { email: email }, select: { password: true } })
-
-            if (!signedInResponse.error && await comparePassword(password, signedInResponse.data.password)) {
-                const { password: _, ...payload } = signedInResponse
+            const signedInResponse = await this.prisma.getData('user', 'findFirst', { where: { email: email }, select: { id: true, password: true } })
+            if (!signedInResponse.error && signedInResponse.data != null && await comparePassword(password, signedInResponse.data.password)) {
+                const { password: _, ...payload } = signedInResponse.data
                 const result = {
                     accessToken: this.jwtService.sign(payload),
                     expiresAt: new Date(
