@@ -1,14 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { SupabaseService } from 'src/supabase/supabase.service';
 import { CustomResponse } from 'src/types/types';
 import { AuthBaseDto } from './dto/auth-base.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserOtpInterface } from './interfaces/user-otp.interface';
-import { Prisma } from '@prisma/client';
+import { OTP_PURPOSE, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma_service/prisma.service';
 import { comparePassword, hashPassword } from 'src/utility/functions/bcrypts';
 import { JwtService } from '@nestjs/jwt';
+import { get } from 'http';
 
 @Injectable()
 export class AuthService {
@@ -65,7 +66,12 @@ export class AuthService {
                     id: signedInResponse.data.id
                 }
                 signedInResponse.data = result
+                return signedInResponse
             }
+            signedInResponse.error = false
+            signedInResponse.msg = 'Invalid email or password'
+            signedInResponse.data = null
+            signedInResponse.status = HttpStatus.UNAUTHORIZED
             return signedInResponse
         }
         catch (e) {
@@ -73,43 +79,105 @@ export class AuthService {
         }
     }
 
-    // async forgotPassword(email: string, otpPayLoad: UserOtpInterface): Promise<CustomResponse> {
-    //     try {
-    //         const user = await this.db.getUserByEmail(email)
+    async forgotPassword(email: string, otpPayLoad: UserOtpInterface): Promise<CustomResponse> {
+        try {
 
-    //         if (!user.data) {
-    //             return user
-    //         }
+            const transaction = await this.prisma.$transaction(async () => {
+                const getUserResponse = await this.prisma.getData('user', 'findFirst', { where: { email: email }, select: { id: true, email: true } })
 
-    //         otpPayLoad.user_id = user.data.id
+                if (getUserResponse.error || getUserResponse.data == null) {
+                    return getUserResponse
+                }
 
-    //         // const otpResponse = await this.db.postData('user_otps', otpPayLoad)
+                otpPayLoad.user_id = getUserResponse.data.id
 
-    //         // if (otpResponse.error) {
-    //         //     return otpResponse
-    //         // }
+                const otpResponse = await this.prisma.postData('user_Otps', 'create', otpPayLoad)
 
-    //         this.mailService.sendMail({
-    //             to: user.data.email,
-    //             template: 'forgot-password',
-    //             subject: 'Forgot Password OTP',
-    //             context: {
-    //                 forgotPasswordOtp: otpPayLoad.otp
-    //             }
-    //         })
-    //     }
-    //     catch (e) {
-    //         return { error: true, msg: `Inernal server error occured, ${e}` }
-    //     }
-    // }
+                if (otpResponse.error || otpResponse.data == null)
+                    return otpResponse
+
+                await this.mailService.sendMail({
+                    to: getUserResponse.data.email,
+                    template: 'forgot-password',
+                    subject: 'Forgot Password OTP',
+                    context: {
+                        forgotPasswordOtp: otpPayLoad.otp
+                    }
+                })
+
+                return {
+                    error: false,
+                    msg: 'OTP sent to your email address',
+                    data: getUserResponse.data.email,
+                    status: HttpStatus.OK
+                }
+            })
+
+            return transaction
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async verifyOtp(email: string, otp: string, purpose: OTP_PURPOSE): Promise<CustomResponse> {
+        try {
+            const getUserResponse = await this.prisma.getData('user', 'findFirst', { where: { email: email }, select: { id: true, email: true } })
+
+            if (getUserResponse.error || getUserResponse.data == null) {
+                return getUserResponse
+            }
+
+            const verifyOtpResponse = await this.prisma.getData('user_Otps', 'findFirst', {
+                where: {
+                    user_id: getUserResponse.data.id,
+                    otp: otp,
+                    purpose: purpose,
+                    used: false
+                }
+            })
+
+            if (verifyOtpResponse.error || !verifyOtpResponse.data)
+                return verifyOtpResponse
+
+            const updateOtpResponse = await this.prisma.updateData('user_Otps', 'update', {
+                where: { id: verifyOtpResponse.data.id },
+                data: { used: true }
+            })
+
+            if (updateOtpResponse.error || !updateOtpResponse.data)
+                return updateOtpResponse
+
+            return {
+                error: false,
+                msg: 'OTP verified successfully'
+            }
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
 
     async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<CustomResponse> {
         try {
-            const user = await this.db.getUser()
-            if (user.data.password != resetPasswordDto.oldPassword)
-                return { error: false, msg: 'Old Password is invalid' }
+            const user = await this.prisma.getData('user', 'findFirst', { where: { email: resetPasswordDto.email }, select: { id: true, email: true } })
+            if (user.error || user.data == null) {
+                return user
+            }
+            const hashedPassword = await hashPassword(resetPasswordDto.newPassword)
+            const updatePasswordResponse = await this.prisma.updateData('user', 'update', {
+                where: { id: user.data.id },
+                data: { password: hashedPassword }
+            })
+            if (updatePasswordResponse.error || !updatePasswordResponse.data)
+                return updatePasswordResponse
 
-            const response = await this.db.resetPassword(resetPasswordDto.newPassword)
+            return {
+                error: false,
+                msg: 'Password reset successfully',
+                data: null,
+                status: HttpStatus.OK
+            }
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
