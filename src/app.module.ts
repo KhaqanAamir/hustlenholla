@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { SupabaseModule } from './supabase/supabase.module';
-import { MailerModule } from '@nestjs-modules/mailer';
+import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { OrdersModule } from './orders/orders.module';
 import * as path from 'path';
@@ -22,11 +22,12 @@ import { DispatchModule } from './work-flow/dispatch/dispatch.module';
       transport: {
         host: process.env.MAIL_SERVER,
         port: 465,
-        secure: false,
+        secure: true,
         auth: {
           user: process.env.MAIL_USERNAME,
-          password: process.env.MAIL_PASSWORD
+          pass: process.env.MAIL_PASSWORD
         },
+        connectionTimeout: 10000,
       },
       defaults: {
         from: 'Hustle-N-Hola'
@@ -60,4 +61,33 @@ import { DispatchModule } from './work-flow/dispatch/dispatch.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {
+
+  constructor(
+    private readonly mailService: MailerService,
+  ) { }
+
+  async testEmail() {
+    try {
+      await this.mailService.sendMail({
+        to: 'khaqanaamir92@gmail.com',
+        subject: 'Test Email',
+        template: 'forgot-password',
+        context: {
+          forgotPasswordOtp: 123432
+        }
+      })
+
+      console.log('Email sent successfully');
+    }
+
+    catch (e) {
+      console.log('Error sending email:', e);
+    }
+
+  }
+
+  async onModuleInit() {
+    // await this.testEmail();
+  }
+}

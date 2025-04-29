@@ -14,7 +14,7 @@ export class OrdersService {
     async createOrder(createOrderDto: CreateOrderDto): Promise<CustomResponse> {
         try {
             const { requested_items, ...orderData } = createOrderDto;
-            const orderCreatedResponse = await this.prisma.orders.create({
+            const orderCreatedResponse = await this.prisma.postData('orders', 'create', {
                 data: {
                     ...orderData,
                     items: {
@@ -24,7 +24,8 @@ export class OrdersService {
                     }
                 }
             })
-            if (!orderCreatedResponse)
+
+            if (orderCreatedResponse.error || !orderCreatedResponse.data)
                 return { error: true, msg: 'Unable to insert data in orders table', data: null }
 
             return { error: false, msg: 'Order Created Successfully', data: orderCreatedResponse }

@@ -18,6 +18,18 @@ model User {
   password        String
   items_cutting   Item_Cutting[]   @relation("workerDetails")
   items_stitching Item_Stitching[] @relation("workerDetails")
+  user_otps       User_Otps[]
+}
+
+model User_Otps {
+  id         Int         @id @default(autoincrement())
+  created_at DateTime    @default(now())
+  otp        String
+  purpose    OTP_PURPOSE
+  used       Boolean     @default(false)
+  user_id    Int
+  User       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expires_at DateTime
 }
 
 model Orders {
