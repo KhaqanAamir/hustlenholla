@@ -1,7 +1,6 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsString, IsStrongPassword } from "class-validator";
-import { USER_ROLES } from "src/enums/user-roles.enum";
-import { Database } from "src/types/supabase";
 import { AuthBaseDto } from "./auth-base.dto";
+import { USER_ROLE } from "@prisma/client";
 
 export class UserSignUpDto extends AuthBaseDto {
     @IsNotEmpty()
@@ -13,6 +12,6 @@ export class UserSignUpDto extends AuthBaseDto {
     last_name: string
 
     @IsNotEmpty()
-    @IsEnum(USER_ROLES)
-    role: Database['public']['Enums']['user_roles']
+    @IsEnum(USER_ROLE)
+    role: USER_ROLE
 }

@@ -1,21 +1,18 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { SupabaseService } from 'src/supabase/supabase.service';
-import { CustomResponse } from 'src/types/types';
+import { CustomResponse } from '../types/types';
 import { AuthBaseDto } from './dto/auth-base.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { UserOtpInterface } from './interfaces/user-otp.interface';
 import { OTP_PURPOSE, Prisma } from '@prisma/client';
-import { PrismaService } from 'src/prisma_service/prisma.service';
-import { comparePassword, hashPassword } from 'src/utility/functions/bcrypts';
+import { PrismaService } from '../prisma_service/prisma.service';
+import { comparePassword, hashPassword } from '../utility/functions/bcrypts';
 import { JwtService } from '@nestjs/jwt';
-import { get } from 'http';
 
 @Injectable()
 export class AuthService {
 
     constructor(
-        private readonly db: SupabaseService,
         private readonly mailService: MailerService,
         private readonly prisma: PrismaService,
         private readonly jwtService: JwtService

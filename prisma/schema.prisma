@@ -76,7 +76,7 @@ model Order_Item {
   quality_control           Item_Quality_Control[]   @relation("qualityCheckDetails")
   stitching                 Item_Stitching[]         @relation("stitchingItem")
   washing                   Item_Washing[]           @relation("washingItem")
-  order                     Orders                   @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade)
+  order                     Orders                   @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Item_Cutting {
@@ -158,17 +158,18 @@ model Item_Quality_Control {
 }
 
 model Item_Packaging {
-  id             Int            @id @default(autoincrement())
-  created_at     DateTime       @default(now())
-  start_date     DateTime       @default(now())
-  last_updated   DateTime       @updatedAt
-  department     DEPARTMENT     @default(PACKAGING_DEPT)
-  status         PACKING_STATUS @default(RAW_MATERIALS_ISSUED)
-  order_details  Json
-  operations     Json
-  total_quantity Int
-  order_item_id  Int            @unique
-  order_item     Order_Item     @relation("packagingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
+  id                Int            @id @default(autoincrement())
+  created_at        DateTime       @default(now())
+  start_date        DateTime       @default(now())
+  last_updated      DateTime       @updatedAt
+  completed_at      DateTime?
+  department        DEPARTMENT     @default(PACKAGING_DEPT)
+  status            PACKING_STATUS @default(RAW_MATERIALS_ISSUED)
+  packaging_details Json?
+  operations        Json?
+  total_quantity    Int?
+  order_item_id     Int            @unique
+  order_item        Order_Item     @relation("packagingItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
 model Item_Dispatch {
@@ -176,11 +177,12 @@ model Item_Dispatch {
   created_at          DateTime           @default(now())
   start_date          DateTime           @default(now())
   last_updated        DateTime           @updatedAt
+  completed_at        DateTime?
   department          DEPARTMENT         @default(DISPATCHED_DEPT)
   status              DISPATCHING_STATUS @default(RAW_MATERIALS_ISSUED)
-  dispatching_details Json
-  operations          Json
-  total_quantity      Int
+  dispatching_details Json?
+  operations          Json?
+  total_quantity      Int?
   order_item_id       Int                @unique
   order_item          Order_Item         @relation("dispatchedItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
@@ -226,7 +228,7 @@ enum ORDER_ITEM_CURRENT_STAGE {
   WASHING
   FINISHING
   PACKAGING
-  DISPATCHED
+  DISPATCHING
 }
 
 enum CUTTING_STATUS {
@@ -272,4 +274,21 @@ enum DEPARTMENT {
   QUALITY_CONTROL_DEPT
   PACKAGING_DEPT
   DISPATCHED_DEPT
+}
+
+enum UK_SIZE {
+  UK_4
+  UK_6
+  UK_8
+  UK_10
+  UK_12
+  UK_14
+  UK_16
+  UK_18
+  UK_20
+  UK_22
+  UK_24
+  UK_26
+  UK_28
+  UK_30
 }

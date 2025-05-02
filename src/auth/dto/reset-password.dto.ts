@@ -1,5 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString } from "class-validator";
-import { Match } from "src/utility/functions/match.decortor";
+import { Match } from "../../utility/functions/match.decortor";
 
 export class ResetPasswordDto {
 

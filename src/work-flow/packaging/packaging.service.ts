@@ -1,20 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { FINISHING_STATUS, ORDER_ITEM_CURRENT_STAGE } from '@prisma/client';
+import { ORDER_ITEM_CURRENT_STAGE, PACKING_STATUS } from '@prisma/client';
 import { PrismaService } from 'src/prisma_service/prisma.service';
 import { CustomResponse } from 'src/types/types';
-import { UpdateFinishingDto } from './dtos/update-finishing.dto';
+import { UpdatePackagingDto } from './dtos/update-packaging.dto';
 
 @Injectable()
-export class FinishingService {
+export class PackagingService {
     constructor(
         private readonly prisma: PrismaService
     ) { }
 
-    async startFinishing(orderItemId: number): Promise<CustomResponse> {
+    async startPackaging(orderItemId: number): Promise<CustomResponse> {
         try {
 
-            const [createFinishingResponse, updateOrderItemResponse] = await this.prisma.$transaction([
-                this.prisma.item_Finishing.create({
+            const [createPackagingResponse, updateOrderItemResponse] = await this.prisma.$transaction([
+                this.prisma.item_Packaging.create({
                     data: {
                         order_item_id: orderItemId
                     }
@@ -22,12 +22,12 @@ export class FinishingService {
                 this.prisma.order_Item.update({
                     where: { id: orderItemId },
                     data: {
-                        current_process: ORDER_ITEM_CURRENT_STAGE.FINISHING
+                        current_process: ORDER_ITEM_CURRENT_STAGE.PACKAGING
                     }
                 })
             ]);
 
-            return { error: false, msg: "Finishing stage started", data: createFinishingResponse };
+            return { error: false, msg: "Packaging stage started", data: createPackagingResponse };
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
@@ -35,9 +35,9 @@ export class FinishingService {
     }
 
 
-    async getSingleFinishingItem(orderItemId: number): Promise<CustomResponse> {
+    async getSinglePackagingItem(orderItemId: number): Promise<CustomResponse> {
         try {
-            const singleRecordResponse = await this.prisma.getData('item_Finishing', 'findUnique', {
+            const singleRecordResponse = await this.prisma.getData('item_Packaging', 'findUnique', {
                 where: { order_item_id: orderItemId },
                 include: {
                     order_item: { include: { order: { select: { id: true, required_date: true } } } }
@@ -68,15 +68,15 @@ export class FinishingService {
         }
     }
 
-    async updateFinishing(finishingItemId: number, body: UpdateFinishingDto, total_quantity: number, now: Date): Promise<CustomResponse> {
+    async updatePackaging(packagingItemId: number, body: UpdatePackagingDto, now: Date): Promise<CustomResponse> {
         try {
-            const updateFinshingResponse = await this.prisma.updateData('item_Finishing', 'update',
+            const updatePackagingResponse = await this.prisma.updateData('item_Packaging', 'update',
                 {
-                    where: { id: finishingItemId },
-                    data: { ...body, status: FINISHING_STATUS.COMPLETED, completed_at: now, total_quantity: total_quantity }
+                    where: { id: packagingItemId },
+                    data: { ...body, status: PACKING_STATUS.COMPLETED, completed_at: now, }
                 })
 
-            return updateFinshingResponse
+            return updatePackagingResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
