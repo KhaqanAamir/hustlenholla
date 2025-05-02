@@ -14,7 +14,8 @@ import { StitchingModule } from './work-flow/stitching/stitching.module';
 import { SupportModule } from './support/support.module';
 import { WashingModule } from './work-flow/washing/washing.module';
 import { FinishingModule } from './work-flow/finishing/finishing.module';
-import { DispatchModule } from './work-flow/dispatch/dispatch.module';
+import { DispatchModule } from './work-flow/dispatching/dispatch.module';
+import { PackagingModule } from './work-flow/packaging/packaging.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { DispatchModule } from './work-flow/dispatch/dispatch.module';
     WashingModule,
     FinishingModule,
     DispatchModule,
+    PackagingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,10 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
 import { ORDER_STATUS, Prisma, USER_ROLE } from '@prisma/client';
 import { GetAllOrdersDto } from './dto/get-all-orders.dto';
-// import { DummyGuard } from 'src/auth/guards/dummy.guard';
 
 @Controller('orders')
 export class OrdersController {
