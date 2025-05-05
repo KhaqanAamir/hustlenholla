@@ -21,13 +21,20 @@ export class AuthService {
 
     async signUp(userSignUpDto: Prisma.UserCreateInput): Promise<CustomResponse> {
         try {
-            userSignUpDto.password = await hashPassword(userSignUpDto.password)
+            const existingUser = await this.prisma.getData('user', 'findUnique', { where: { email: userSignUpDto.email } })
+            if (existingUser.data) {
+                return { error: true, msg: 'User already exists', data: null, status: HttpStatus.BAD_REQUEST }
+            }
 
+            userSignUpDto.password = await hashPassword(userSignUpDto.password)
             const signedUpResponse = await this.prisma.postData(
                 'user',
                 'create',
                 userSignUpDto
             )
+            if (signedUpResponse.error || signedUpResponse.data == null)
+                return signedUpResponse
+
             const { password: _, ...payload } = signedUpResponse
             const result = {
                 accessToken: this.jwtService.sign(payload),

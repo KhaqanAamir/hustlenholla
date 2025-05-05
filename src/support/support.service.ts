@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma_service/prisma.service';
+import { PrismaService } from '../prisma_service/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CustomResponse } from 'src/types/types';
+import { CustomResponse } from '../types/types';
 
 @Injectable()
 export class SupportService {

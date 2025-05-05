@@ -17,24 +17,16 @@ export class AuthController {
     async signUp(
         @Body() userSignUpDto: UserSignUpDto
     ) {
-        const response = await this.authService.signUp(
+        return await this.authService.signUp(
             userSignUpDto as Prisma.UserCreateInput
         )
-        if (response.error) {
-            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
-        }
-        return response
     }
 
     @Post('/sign-in')
     async signIn(
         @Body() userSignInDto: AuthBaseDto
     ) {
-        const response = await this.authService.signIn(userSignInDto)
-        if (response.error)
-            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
-
-        return response
+        return await this.authService.signIn(userSignInDto)
     }
 
     @Post('/forgot-password')
@@ -56,12 +48,7 @@ export class AuthController {
             purpose: OTP_PURPOSE.FORGOT_PASSWORD,
             used: false
         }
-        const response = await this.authService.forgotPassword(email, otpPayLoad)
-
-        if (response.error)
-            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
-
-        return response
+        return await this.authService.forgotPassword(email, otpPayLoad)
     }
 
     @Get('/verify-otp')
@@ -73,22 +60,13 @@ export class AuthController {
             return { error: false, msg: 'Please enter a valid email address and OTP' }
         }
 
-        const response = await this.authService.verifyOtp(email, otp, OTP_PURPOSE.FORGOT_PASSWORD)
-
-        if (response.error)
-            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
-
-        return response
+        return await this.authService.verifyOtp(email, otp, OTP_PURPOSE.FORGOT_PASSWORD)
     }
 
     @Patch('/reset-password')
     async resetPassword(
         @Body() resetPasswordDto: ResetPasswordDto
     ) {
-        const response = await this.authService.resetPassword(resetPasswordDto)
-        if (response.error)
-            throw new HttpException(response.msg, HttpStatus.BAD_REQUEST)
-
-        return response
+        return await this.authService.resetPassword(resetPasswordDto)
     }
 }

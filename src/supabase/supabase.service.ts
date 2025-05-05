@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { createClient, SignInWithPasswordCredentials, SignUpWithPasswordCredentials, SupabaseClient, User } from '@supabase/supabase-js';
 import { Database, TablesInsert } from 'src/types/supabase';
 import { CustomResponse } from 'src/types/types';
-import { pgToHttpErr } from 'src/types/utils';
+import { pgToHttpErr } from '../types/utils';
 
 @Injectable()
 export class SupabaseService {

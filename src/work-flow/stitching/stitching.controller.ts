@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { StitchingService } from './stitching.service';
 import { USER_ROLE } from '@prisma/client';
-import { Roles } from 'src/auth/decorator/roles.decorator';
-import { UserGuard } from 'src/auth/guards/auth.guard';
-import { RoleGuard } from 'src/auth/guards/role.guard';
+import { Roles } from '../../auth/decorator/roles.decorator';
+import { UserGuard } from '../../auth/guards/auth.guard';
+import { RoleGuard } from '../../auth/guards/role.guard';
 import { UpdateStitchingDto } from './dtos/update-stitching.dto';
 
 @Controller('stitching')
