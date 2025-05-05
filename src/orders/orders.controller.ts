@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
@@ -122,5 +122,12 @@ export class OrdersController {
             status: ORDER_STATUS.COMPLETED
         }
         return await this.ordersService.checkOrderCompletion({ where })
+    }
+
+    @Put('order-item-id/:id/mark-as-completed')
+    async markOrderItemAsCompleted(
+        @Param('id') orderItemId: string
+    ) {
+        return await this.ordersService.markOrderItemAsCompleted(+orderItemId)
     }
 }

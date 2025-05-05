@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma_service/prisma.service';
-import { CustomResponse } from 'src/types/types';
+import { PrismaService } from '../../prisma_service/prisma.service';
+import { CustomResponse } from '../../types/types';
 import { UpdateCuttingDto } from './dtos/update-cutting.dto';
 import { CUTTING_STATUS, ORDER_ITEM_CURRENT_STAGE } from '@prisma/client';
 

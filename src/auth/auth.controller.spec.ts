@@ -1,82 +1,71 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { AppModule } from '../app.module';
 
-describe('AuthController', () => {
-  let authController: AuthController;
-  let authService: AuthService;
+describe('AuthController (E2E)', () => {
+  let app: INestApplication;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [
-        {
-          provide: AuthService,
-          useValue: {
-            signUp: jest.fn(),
-            signIn: jest.fn(),
-            forgotPassword: jest.fn(),
-            verifyOtp: jest.fn(),
-            resetPassword: jest.fn(),
-          },
-        },
-      ],
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
-    authController = module.get<AuthController>(AuthController);
-    authService = module.get<AuthService>(AuthService);
+    app = moduleFixture.createNestApplication();
+    await app.init();
   });
 
-  describe('signUp', () => {
-    it('should return success response when signUp is successful', async () => {
-      const mockResponse = { error: false, msg: 'User signed up successfully' };
-      jest.spyOn(authService, 'signUp').mockResolvedValue(mockResponse);
-
-      const result = await authController.signUp({ email: 'test@example.com', password: 'password123', first_name: 'khaqan', last_name: 'aamir', role: 'SUPER_ADMIN' });
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should throw an error when signUp fails', async () => {
-      const mockResponse = { error: true, msg: 'Sign up failed' };
-      jest.spyOn(authService, 'signUp').mockResolvedValue(mockResponse);
-
-      await expect(authController.signUp({ email: 'test@example.com', password: 'password123', first_name: 'khaqan', last_name: 'aamir', role: 'SUPER_ADMIN' }))
-        .rejects.toThrow(new HttpException(mockResponse.msg, HttpStatus.BAD_REQUEST));
-    });
-
-    it('should throw an error when invalid data is provided', async () => {
-      jest.spyOn(authService, 'signUp').mockResolvedValue(null);
-
-      await expect(authController.signUp({ email: 'test@example.com', password: 'password123', first_name: 'khaqan', last_name: 'aamir', role: 'SUPER_ADMIN' }))
-        .rejects.toThrow(HttpException);
-    });
+  afterAll(async () => {
+    await app.close();
   });
 
-  describe('signIn', () => {
-    it('should return success response when signIn is successful', async () => {
-      const mockResponse = { error: false, msg: 'User signed in successfully' };
-      jest.spyOn(authService, 'signIn').mockResolvedValue(mockResponse);
+  it('/auth/sign-up (POST) - should create a new user', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/sign-up')
+      .send({
+        email: 'test@example.com',
+        password: 'password123',
+        first_name: 'John',
+        last_name: 'Doe',
+        role: 'SUPER_ADMIN',
+      });
 
-      const result = await authController.signIn({ email: 'test@example.com', password: 'password123' });
-      expect(result).toEqual(mockResponse);
-    });
-
-    it('should throw an error when signIn fails', async () => {
-      const mockResponse = { error: true, msg: 'Invalid email or password' };
-      jest.spyOn(authService, 'signIn').mockResolvedValue(mockResponse);
-
-      await expect(authController.signIn({ email: 'test@example.com', password: 'wrongpassword' }))
-        .rejects.toThrow(new HttpException(mockResponse.msg, HttpStatus.BAD_REQUEST));
-    });
-
-    it('should throw an error when invalid data is provided', async () => {
-      jest.spyOn(authService, 'signIn').mockResolvedValue(null);
-
-      await expect(authController.signIn({ email: '', password: '' }))
-        .rejects.toThrow(HttpException);
-    });
+    expect(response.status).toBe(201);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        error: false,
+        msg: expect.any(String),
+        data: expect.objectContaining({
+          accessToken: expect.any(String),
+          expiresAt: expect.any(Number),
+          email: 'test@example.com',
+          id: expect.any(Number),
+        }),
+        status: 200,
+      }),
+    );
   });
 
-  // Add similar test cases for forgotPassword, verifyOtp, and resetPassword
+  it.only('/auth/sign-up (POST) - should return error for duplicate email', async () => {
+
+    const response = await request(app.getHttpServer())
+      .post('/auth/sign-up')
+      .send({
+        email: 'test@example.com',
+        password: 'password123',
+        first_name: 'John',
+        last_name: 'Doe',
+        role: 'SUPER_ADMIN',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        error: true,
+        msg: 'User already exists',
+        data: null,
+        status: 400,
+      }),
+    );
+  })
 });

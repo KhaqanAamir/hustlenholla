@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { FINISHING_STATUS, ORDER_ITEM_CURRENT_STAGE } from '@prisma/client';
-import { PrismaService } from 'src/prisma_service/prisma.service';
-import { CustomResponse } from 'src/types/types';
+import { PrismaService } from '../../prisma_service/prisma.service';
+import { CustomResponse } from '../../types/types';
 import { UpdateFinishingDto } from './dtos/update-finishing.dto';
 
 @Injectable()

@@ -1,6 +1,5 @@
-import { IsEmpty, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
-import { REQUESTED_ITEMS } from "src/enums/requested-items.enum";
-import { Database } from "src/types/supabase";
+import { ORDER_CATEGORY } from "@prisma/client";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class RequestedItemsDto {
     @IsNotEmpty()
@@ -14,8 +13,8 @@ export class RequestedItemsDto {
     @IsString()
     additional_specifications: string
 
-    @IsEnum(REQUESTED_ITEMS)
-    category: Database['public']['Enums']['order_category']
+    @IsEnum(ORDER_CATEGORY)
+    category: ORDER_CATEGORY
 
     @IsNotEmpty()
     @IsString()

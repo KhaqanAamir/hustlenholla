@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { WashingService } from './washing.service';
-import { Roles } from 'src/auth/decorator/roles.decorator';
+import { Roles } from '../../auth/decorator/roles.decorator';
 import { USER_ROLE } from '@prisma/client';
-import { UserGuard } from 'src/auth/guards/auth.guard';
-import { RoleGuard } from 'src/auth/guards/role.guard';
+import { UserGuard } from '../../auth/guards/auth.guard';
+import { RoleGuard } from '../../auth/guards/role.guard';
 import { UpdateWashingDto } from './dtos/update-washing.dto';
 
 @Controller('washing')

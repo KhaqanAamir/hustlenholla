@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
-import { PrismaService } from 'src/prisma_service/prisma.service';
+import { PrismaService } from '../prisma_service/prisma.service';
 import { ORDER_STATUS, Prisma } from '@prisma/client';
 
 @Injectable()
@@ -38,7 +38,6 @@ export class OrdersService {
     // will be used if wanted to add order item manually,, as of now not needed
     async createRequestedItems(itemsWithOrderId: Prisma.Order_ItemCreateInput[]): Promise<CustomResponse> {
         try {
-            // const requestedItemsResponse = await this.supabaseService.postData('requested_items', itemsWithOrderId)
             const requestedItemsResponse = await this.prisma.postData('order_Item', 'createMany', itemsWithOrderId)
 
             if (requestedItemsResponse.error)
@@ -230,5 +229,22 @@ export class OrdersService {
         }
     }
 
+    async markOrderItemAsCompleted(orderItemId: number): Promise<CustomResponse> {
+        try {
+            const markOrderItemAsCompletedResponse = await this.prisma.updateData('order_Item', 'update', {
+                where: { id: orderItemId },
+                data: {
+                    status: ORDER_STATUS.COMPLETED
+                }
+            })
 
+            if (markOrderItemAsCompletedResponse.error || !markOrderItemAsCompletedResponse.data)
+                return markOrderItemAsCompletedResponse
+
+            return markOrderItemAsCompletedResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
 }
