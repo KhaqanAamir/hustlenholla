@@ -39,7 +39,6 @@ export class OrdersController {
         createOrderDto.net_amount = net_amount
 
         return await this.ordersService.createOrder(createOrderDto)
-
     }
 
     // the below function will upload record on requested_items table
@@ -66,8 +65,8 @@ export class OrdersController {
     }
 
     @Get('/assigned-work-orders')
-    async totalWorkOrders() {
-        return await this.ordersService.totalWorkOrders()
+    async assignedWorkOrders() {
+        return await this.ordersService.assignedWorkOrders()
     }
 
     @Get('/pending-work-orders')
@@ -98,6 +97,8 @@ export class OrdersController {
         return await this.ordersService.getAllWorkOrders({ where, skip, take })
     }
 
+    // the tracking of single order will be used only with start-date not with
+    // completed-date,, if needed will add that as well
     @Get('/get-single-work-order/:order_Id')
     async getWorkOrderDetails(
         @Param('order_Id') orderId: string
@@ -105,6 +106,7 @@ export class OrdersController {
         return await this.ordersService.getWorkOrderDetails(+orderId)
     }
 
+    // endpoint needed by Alan for AI module
     @Get('/completed/today')
     async checkOrderCompletion(
     ) {

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
 import { PrismaService } from '../prisma_service/prisma.service';
-import { ORDER_STATUS, Prisma } from '@prisma/client';
+import { ORDER_ITEM_STATUS, ORDER_STATUS, Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -15,23 +15,20 @@ export class OrdersService {
         try {
             const { requested_items, ...orderData } = createOrderDto;
             const orderCreatedResponse = await this.prisma.postData('orders', 'create', {
-                data: {
-                    ...orderData,
-                    items: {
-                        create: [
-                            ...requested_items
-                        ]
-                    }
+                ...orderData,
+                items: {
+                    create: [
+                        ...requested_items
+                    ]
                 }
             })
-
             if (orderCreatedResponse.error || !orderCreatedResponse.data)
-                return { error: true, msg: 'Unable to insert data in orders table', data: null }
+                return orderCreatedResponse
 
-            return { error: false, msg: 'Order Created Successfully', data: orderCreatedResponse }
+            return orderCreatedResponse
         }
         catch (e) {
-            return { error: true, msg: `Inernal server error occured, ${e}` }
+            return { error: true, msg: `Internal server error occured, ${e}` }
         }
     }
 
@@ -50,15 +47,19 @@ export class OrdersService {
         }
     }
 
-    async totalWorkOrders(): Promise<CustomResponse> {
+    async assignedWorkOrders(): Promise<CustomResponse> {
         try {
-            const totalOrdersResponse = await this.prisma.getData('orders', 'findMany')
-            if (totalOrdersResponse.error || !totalOrdersResponse.data)
-                return totalOrdersResponse
+            const assignedWorkOrdersResponse = await this.prisma.getData('order_Item', 'findMany', {
+                where: {
+                    status: ORDER_ITEM_STATUS.PENDING
+                }
+            })
+            if (assignedWorkOrdersResponse.error || !assignedWorkOrdersResponse.data)
+                return assignedWorkOrdersResponse
 
-            totalOrdersResponse.totalOrders = totalOrdersResponse.data.length
-            delete totalOrdersResponse.data
-            return totalOrdersResponse
+            assignedWorkOrdersResponse.totalOrders = assignedWorkOrdersResponse.data.length
+            delete assignedWorkOrdersResponse.data
+            return assignedWorkOrdersResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
@@ -67,9 +68,15 @@ export class OrdersService {
 
     async pendingWorkOrders(): Promise<CustomResponse> {
         try {
-            const pendingOrdersResponse = await this.prisma.getData('orders', 'findMany', {
+            const currentDate = new Date();
+            const pendingOrdersResponse = await this.prisma.getData('order_Item', 'findMany', {
                 where: {
-                    status: ORDER_STATUS.PENDING
+                    order: {
+                        required_date: {
+                            lt: currentDate
+                        }
+                    },
+                    status: ORDER_ITEM_STATUS.PENDING
                 }
             })
             if (pendingOrdersResponse.error || !pendingOrdersResponse.data)
@@ -86,9 +93,9 @@ export class OrdersService {
 
     async completedWorkOrders(): Promise<CustomResponse> {
         try {
-            const completedOrdersResponse = await this.prisma.getData('orders', 'findMany', {
+            const completedOrdersResponse = await this.prisma.getData('order_Item', 'findMany', {
                 where: {
-                    status: ORDER_STATUS.COMPLETED
+                    status: ORDER_ITEM_STATUS.COMPLETED
                 }
             })
             if (completedOrdersResponse.error || !completedOrdersResponse.data)

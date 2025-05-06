@@ -47,7 +47,6 @@ import { PackagingModule } from './work-flow/packaging/packaging.module';
       envFilePath: '.env',
       isGlobal: true,
     }),
-
     AuthModule,
     SupabaseModule,
     OrdersModule,

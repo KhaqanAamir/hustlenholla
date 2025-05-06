@@ -35,12 +35,12 @@ model User_Otps {
 model Orders {
   id                   Int          @id @default(autoincrement())
   created_at           DateTime     @default(now())
-  required_date        DateTime     @default(now())
+  required_date        DateTime
   updated_at           DateTime     @updatedAt
   completed_at         DateTime?
   supplier_name        String
   supplier_address     String?
-  supplier_email       String
+  customer_email       String
   remarks              String?
   delivery_period      Int?
   status               ORDER_STATUS @default(PENDING)
@@ -56,27 +56,27 @@ model Orders {
 }
 
 model Order_Item {
-  id                        Int                      @id @default(autoincrement())
-  created_at                DateTime                 @default(now())
+  id                        Int                       @id @default(autoincrement())
+  created_at                DateTime                  @default(now())
   item_description          String
   item_code                 String
   additional_specifications String?
-  status                    ORDER_ITEM_STATUS        @default(PENDING)
-  current_process           ORDER_ITEM_CURRENT_STAGE @default(CUTTING)
+  status                    ORDER_ITEM_STATUS         @default(PENDING)
+  current_process           ORDER_ITEM_CURRENT_STAGE?
   order_id                  Int
   category                  ORDER_CATEGORY
   unit                      String
   quantity                  Int
   rate                      Int
   amount                    Int
-  cutting                   Item_Cutting[]           @relation("cuttingItem")
-  dispatched                Item_Dispatch[]          @relation("dispatchedItem")
-  finishing                 Item_Finishing[]         @relation("finishingItem")
-  packaging                 Item_Packaging[]         @relation("packagingItem")
-  quality_control           Item_Quality_Control[]   @relation("qualityCheckDetails")
-  stitching                 Item_Stitching[]         @relation("stitchingItem")
-  washing                   Item_Washing[]           @relation("washingItem")
-  order                     Orders                   @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  cutting                   Item_Cutting[]            @relation("cuttingItem")
+  dispatched                Item_Dispatch[]           @relation("dispatchedItem")
+  finishing                 Item_Finishing[]          @relation("finishingItem")
+  packaging                 Item_Packaging[]          @relation("packagingItem")
+  quality_control           Item_Quality_Control[]    @relation("qualityCheckDetails")
+  stitching                 Item_Stitching[]          @relation("stitchingItem")
+  washing                   Item_Washing[]            @relation("washingItem")
+  order                     Orders                    @relation("orderItems", fields: [order_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
 }
 
 model Item_Cutting {

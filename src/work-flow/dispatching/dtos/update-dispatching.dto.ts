@@ -70,7 +70,7 @@ export class UpdateDispatchingDto {
     @IsNotEmpty()
     @ValidateNested({ each: true })
     @Type(() => DispactchingDetails)
-    packaging_details: DispactchingDetails
+    dispatching_details: DispactchingDetails
 
     @IsNotEmpty()
     @IsArray()

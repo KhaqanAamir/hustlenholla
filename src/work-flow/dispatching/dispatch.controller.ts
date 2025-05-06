@@ -32,7 +32,7 @@ export class DispatchController {
 
     @Roles(USER_ROLE.SUPER_ADMIN)
     @UseGuards(UserGuard, RoleGuard)
-    @Put('/packaging-item-id/:id/update')
+    @Put('/dispatching-item-id/:id/update')
     async updateDispatching(
         @Param('id') dispatchingItemId: string,
         @Body() body: UpdateDispatchingDto

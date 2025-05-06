@@ -3,7 +3,7 @@ import { Type } from "class-transformer";
 import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
 
-class FinishingDetails {
+class WashingDeatils {
     @IsNotEmpty()
     @IsString()
     issued_by: string
@@ -56,8 +56,8 @@ class Operations {
 export class UpdateWashingDto {
     @IsNotEmpty()
     @ValidateNested({ each: true })
-    @Type(() => FinishingDetails)
-    finishing_details: FinishingDetails
+    @Type(() => WashingDeatils)
+    washing_details: WashingDeatils
 
     @IsNotEmpty()
     @IsArray()
