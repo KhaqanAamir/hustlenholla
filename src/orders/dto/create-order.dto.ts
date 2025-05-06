@@ -19,7 +19,7 @@ export class CreateOrderDto {
 
     @IsString()
     @IsEmail()
-    supplier_email: string
+    customer_email: string
 
     @IsString()
     remarks: string
