@@ -1,30 +1,33 @@
 import { ORDER_CATEGORY } from "@prisma/client";
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsNumber, IsOptional, IsString } from "class-validator";
 
-export class RequestedItemsDto {
-    @IsNotEmpty()
+
+export class UpdateRequestedItemsDto {
+    @IsOptional()
     @IsString()
     item_description: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     item_code: string
 
+    @IsOptional()
     @IsString()
     additional_specifications: string
 
+    @IsOptional()
     @IsEnum(ORDER_CATEGORY)
     category: ORDER_CATEGORY
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     unit: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     quantity: number
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     rate: number
 

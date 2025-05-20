@@ -3,6 +3,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
 import { PrismaService } from '../prisma_service/prisma.service';
 import { ORDER_ITEM_STATUS, ORDER_STATUS, Prisma } from '@prisma/client';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -22,9 +23,6 @@ export class OrdersService {
                     ]
                 }
             })
-            if (orderCreatedResponse.error || !orderCreatedResponse.data)
-                return orderCreatedResponse
-
             return orderCreatedResponse
         }
         catch (e) {
@@ -126,10 +124,12 @@ export class OrdersService {
                     }
                 }
             })
+
+            const totalCountResponse = await this.prisma.order_Item.count()
             if (getAllOrdersResponse.error || !getAllOrdersResponse.data)
                 return getAllOrdersResponse
 
-            getAllOrdersResponse.allOrders = getAllOrdersResponse.data.map((o) => ({
+            getAllOrdersResponse.data = getAllOrdersResponse.data.map((o: any) => ({
                 id: o.id,
                 item_description: o.item_description,
                 item_code: o.item_code,
@@ -138,8 +138,7 @@ export class OrdersService {
                 status: o.status
             }))
 
-
-            delete getAllOrdersResponse.data
+            getAllOrdersResponse.count = totalCountResponse
             return getAllOrdersResponse
         }
         catch (e) {
@@ -249,6 +248,23 @@ export class OrdersService {
                 return markOrderItemAsCompletedResponse
 
             return markOrderItemAsCompletedResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async updateOrder(orderId: number, body: UpdateOrderDto): Promise<CustomResponse> {
+        try {
+            const updateOrderResponse = await this.prisma.updateData('orders', 'update', {
+                where: { id: orderId },
+                data: body
+            })
+
+            if (updateOrderResponse.error || !updateOrderResponse.data)
+                return updateOrderResponse
+
+            return updateOrderResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
