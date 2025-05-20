@@ -1,60 +1,65 @@
 import { Transform, Type } from "class-transformer";
-import { IsArray, IsDate, IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
-import { RequestedItemsDto } from "./requested-items.dto";
+import { IsArray, IsDate, IsEmail, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
+import { UpdateRequestedItemsDto } from "./update-requested-items.dto";
 
-export class CreateOrderDto {
-
-    @IsNotEmpty()
+export class UpdateOrderDto {
+    @IsOptional()
     @IsDate()
     @Transform(({ value }) => new Date(value))
     required_date: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     supplier_name: string
 
+    @IsOptional()
     @IsString()
     supplier_address: string
 
+    @IsOptional()
     @IsString()
     @IsEmail()
     customer_email: string
 
+    @IsOptional()
     @IsString()
     remarks: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     delivery_period: number
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     delivery_destination: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     payment_terms: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     freight_terms: string
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
-    @Type(() => RequestedItemsDto)
-    requested_items: RequestedItemsDto[]
+    @Type(() => UpdateRequestedItemsDto)
+    requested_items: UpdateRequestedItemsDto[]
 
     @IsOptional()
     @IsNumber()
     total_amount: number
 
+    @IsOptional()
     @IsNumber()
     sales_tax: number
 
+    @IsOptional()
     @IsNumber()
     discount: number
 
+    @IsOptional()
     @IsNumber()
     freight: number
 

@@ -116,7 +116,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             const result = await this[modelName][method](dataToUpdate)
             return {
                 error: false,
-                msg: `Data successfully inserted into ${String(modelName)}`,
+                msg: `Data successfully updated into ${String(modelName)}`,
                 data: result,
                 status: HttpStatus.OK,
             };
@@ -125,6 +125,36 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
             return {
                 error: true,
                 msg: `Error fetching data from ${String(modelName)}: ${e.message}`,
+                data: null,
+                status: HttpStatus.INTERNAL_SERVER_ERROR,
+            };
+        }
+    }
+
+    public async deleteData<
+        T extends keyof PrismaClient,
+        M extends 'delete',
+        // @ts-ignore
+        Args extends Parameters<this[T][M]>[0]
+    >(
+        modelName: T,
+        method: M,
+        args?: Args
+    ): Promise<CustomResponse> {
+        try {
+            // @ts-ignore
+            const result = args ? await this[modelName][method](args) : await this[modelName][method]();
+            return {
+                error: false,
+                msg: `Data successfully deleted from ${String(modelName)}`,
+                data: result,
+                status: HttpStatus.OK,
+            };
+        }
+        catch (e) {
+            return {
+                error: true,
+                msg: `Error deleting data from ${String(modelName)}: ${e.message}`,
                 data: null,
                 status: HttpStatus.INTERNAL_SERVER_ERROR,
             };

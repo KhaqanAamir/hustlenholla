@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
-import { ORDER_STATUS, Prisma, USER_ROLE } from '@prisma/client';
+import { ORDER_STATUS, Prisma } from '@prisma/client';
 import { GetAllOrdersDto } from './dto/get-all-orders.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -131,5 +132,13 @@ export class OrdersController {
         @Param('id') orderItemId: string
     ) {
         return await this.ordersService.markOrderItemAsCompleted(+orderItemId)
+    }
+
+    @Put('update-order/:order_id')
+    async updateOrder(
+        @Param('order_id', ParseIntPipe) orderId: number,
+        @Body() body: UpdateOrderDto
+    ) {
+        return await this.ordersService.updateOrder(orderId, body)
     }
 }

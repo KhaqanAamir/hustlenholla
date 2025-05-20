@@ -187,6 +187,16 @@ model Item_Dispatch {
   order_item          Order_Item         @relation("dispatchedItem", fields: [order_item_id], references: [id], onDelete: Cascade)
 }
 
+model Fabric_Request {
+  id              Int      @id @default(autoincrement())
+  created_at      DateTime @default(now())
+  required_date   DateTime
+  last_updated    DateTime @updatedAt
+  request_details Json
+  operations      Json
+  total_quantity  Int
+}
+
 model Customer_Issue {
   id             Int      @id @default(autoincrement())
   created_at     DateTime @default(now())
