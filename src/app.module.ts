@@ -7,7 +7,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 import { MailerModule, MailerService } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { OrdersModule } from './orders/orders.module';
-import * as path from 'path';
+import { join } from 'path';
 import { PrismaModule } from './prisma_service/prisma.module';
 import { CuttingModule } from './work-flow/cutting/cutting.module';
 import { StitchingModule } from './work-flow/stitching/stitching.module';
@@ -17,6 +17,7 @@ import { FinishingModule } from './work-flow/finishing/finishing.module';
 import { DispatchModule } from './work-flow/dispatching/dispatch.module';
 import { PackagingModule } from './work-flow/packaging/packaging.module';
 import { FabricInspectionModule } from './fabric-inspection/inspection.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
 
 @Module({
   imports: [
@@ -36,13 +37,17 @@ import { FabricInspectionModule } from './fabric-inspection/inspection.module';
       },
       template: {
         dir: (() => {
-          return path.join(process.cwd() + '/templates');
+          return join(process.cwd() + '/templates');
         })(),
         adapter: new HandlebarsAdapter(undefined, { inlineCssEnabled: true }),
         options: {
           strict: true
         }
       }
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads/',
     }),
     ConfigModule.forRoot({
       envFilePath: '.env',

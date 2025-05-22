@@ -12,18 +12,21 @@ export class OrdersService {
         private readonly prisma: PrismaService,
     ) { }
 
-    async createOrder(createOrderDto: CreateOrderDto): Promise<CustomResponse> {
+    async createOrder(createOrderDto: CreateOrderDto, itemImages: string[]): Promise<CustomResponse> {
         try {
-            const { requested_items, ...orderData } = createOrderDto;
+            let { requested_items, ...orderData } = createOrderDto;
+            const itemsWithImages = requested_items.map((item, index) => ({
+                ...item,
+                current_process: ORDER_ITEM_CURRENT_STAGE.CUTTING,
+                item_image: itemImages[index]
+            })
+            )
             const [orderCreatedResponse] = await this.prisma.$transaction([
                 this.prisma.orders.create({
                     data: {
                         ...orderData,
                         items: {
-                            create: requested_items.map((item) => ({
-                                ...item,
-                                current_process: ORDER_ITEM_CURRENT_STAGE.CUTTING,
-                            })),
+                            create: itemsWithImages
                         },
                     },
                     include: {

@@ -25,6 +25,7 @@ export class CreateOrderDto {
 
     @IsNotEmpty()
     @IsNumber()
+    @Type(() => Number)
     delivery_period: number
 
     @IsNotEmpty()
@@ -50,12 +51,15 @@ export class CreateOrderDto {
     total_amount: number
 
     @IsNumber()
+    @Type(() => Number)
     sales_tax: number
 
     @IsNumber()
+    @Type(() => Number)
     discount: number
 
     @IsNumber()
+    @Type(() => Number)
     freight: number
 
     @IsOptional()

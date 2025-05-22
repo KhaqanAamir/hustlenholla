@@ -1,23 +1,86 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
 import { ORDER_STATUS, Prisma } from '@prisma/client';
 import { GetAllOrdersDto } from './dto/get-all-orders.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { join, extname } from 'path';
+import { UserGuard } from 'src/auth/guards/auth.guard';
+import { v4 as uuidv4 } from 'uuid'
 
 @Controller('orders')
 export class OrdersController {
 
     constructor(private readonly ordersService: OrdersService) { }
 
+    // {
+    //     "required_date":"2025-06-13T09:00:00Z",
+    //     "supplier_name":"Khaqan's IT",
+    //     "supplier_address":"Bahria Town",
+    //     "customer_email":"abc@gmail.com",
+    //     "remarks":"first order",
+    //     "delivery_period":10,
+    //     "delivery_destination":"Islamabad",
+    //     "payment_terms":"unknown",
+    //     "freight_terms":"unknown",
+    //     "sales_tax":15,
+    //     "discount":0,
+    //     "freight":0,
+    //     "requested_items":[
+    //         {
+    //             "item_description":"excellent product",
+    //             "item_code":"UI-266",
+    //             "additional_specifications":"not required at the moment",
+    //             "category":"ZIPPER",
+    //             "unit":"9",
+    //             "quantity":500,
+    //             "rate":10
+    //         },
+    //         {
+    //             "item_description":"excellent product",
+    //             "item_code":"UI-266",
+    //             "additional_specifications":"not required at the moment",
+    //             "category":"ZIPPER",
+    //             "unit":"9",
+    //             "quantity":200,
+    //             "rate":13
+    //         }
+    //     ]
+    // }
+
     // splitting functions of order and requested items for reusability and testability,
     // also a modular approach to better debug and scale if we have to do in future
     @Post('/')
+    @UseInterceptors(
+        FilesInterceptor('item_images', 10, {
+            storage: diskStorage({
+                destination: join(__dirname, '..', '..', 'uploads'),
+                filename: (req, file, callback) => {
+                    const uniqueSuffix = `${uuidv4()}${extname(file.originalname)}`
+                    callback(null, uniqueSuffix)
+                }
+            }),
+            fileFilter: (req, file, callback) => {
+                if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+                    return callback(new Error('Only image files are allowed!'), false)
+                }
+                callback(null, true)
+            },
+            limits: { fileSize: 5 * 1024 * 1024 } // 5 MB
+        })
+    )
     async createOrder(
+        @UploadedFiles() itemImages: Express.Multer.File[],
         @Body() createOrderDto: CreateOrderDto
-    ): Promise<CustomResponse> {
+    ) {
 
+        if (itemImages.length === createOrderDto.requested_items.length)
+            throw new Error('Make sure to upload images for all requested items')
+
+        const images = itemImages.map(file => `/uploads/${file.filename}`);
         let total_amount: number = 0;
 
         createOrderDto.requested_items.forEach(item => {
@@ -39,7 +102,7 @@ export class OrdersController {
         createOrderDto.total_amount = total_amount
         createOrderDto.net_amount = net_amount
 
-        return await this.ordersService.createOrder(createOrderDto)
+        return await this.ordersService.createOrder(createOrderDto, images)
     }
 
     // the below function will upload record on requested_items table
