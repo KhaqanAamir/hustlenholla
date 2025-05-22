@@ -34,7 +34,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     >(
         modelName: T,
         method: M,
-        dataToPost: InputType
+        dataToPost: InputType,
     ): Promise<CustomResponse> {
         try {
             //@ts-ignore
