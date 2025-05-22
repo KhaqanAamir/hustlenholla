@@ -15,7 +15,7 @@ model User {
   first_name      String
   last_name       String
   role            USER_ROLE
-  password        String
+  password        String?
   items_cutting   Item_Cutting[]   @relation("workerDetails")
   items_stitching Item_Stitching[] @relation("workerDetails")
   user_otps       User_Otps[]
