@@ -8,6 +8,10 @@ import { OTP_PURPOSE, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma_service/prisma.service';
 import { comparePassword, hashPassword } from '../utility/functions/bcrypts';
 import { JwtService } from '@nestjs/jwt';
+import { InviteUserDto } from './dto/invite-user.dtos';
+import * as crypto from 'crypto';
+import { SetPasswordDto } from './dto/set-password.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -78,6 +82,104 @@ export class AuthService {
             signedInResponse.data = null
             signedInResponse.status = HttpStatus.UNAUTHORIZED
             return signedInResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+
+    async inviteUser(body: InviteUserDto): Promise<CustomResponse> {
+        try {
+            const { email, role } = body;
+            const now = new Date();
+            const existingInvite = await this.prisma.getData('inviteLink', 'findFirst', { where: { email: email, used: false, expires_at: { gte: now } } })
+            if (existingInvite.data)
+                return { error: true, msg: 'Invite link already sent to this email', data: null, status: HttpStatus.BAD_REQUEST }
+
+            const token = crypto.randomBytes(32).toString('hex')
+            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+            const createInviteResponse = await this.prisma.postData('inviteLink', 'create', {
+                email: email,
+                token: token,
+                role: role,
+                expires_at: expiresAt,
+                used: false
+            })
+
+            if (createInviteResponse.error || !createInviteResponse.data)
+                return createInviteResponse
+
+            console.log(createInviteResponse)
+
+            const inviteLink = `${process.env.FRONTEND_URL}set-password?token=${token}`;
+            await this.mailService.sendMail({
+                to: email,
+                template: 'invite-user',
+                subject: 'Invite User',
+                context: {
+                    inviteLink: inviteLink,
+                    role: role
+                }
+            })
+
+            return {
+                error: false,
+                msg: 'Invite link sent successfully',
+                data: null,
+                status: HttpStatus.OK
+            }
+
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async verifyInviteToken(token: string): Promise<CustomResponse> {
+        try {
+            const now = new Date();
+            const inviteLinkResponse = await this.prisma.getData('inviteLink', 'findUnique', { where: { token: token, used: false, expires_at: { gte: now } } })
+            if (inviteLinkResponse.error || !inviteLinkResponse.data)
+                return inviteLinkResponse
+
+            return {
+                error: false,
+                msg: 'Token verified successfully',
+                data: inviteLinkResponse.data,
+                status: HttpStatus.OK
+            }
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async setPassword(body: SetPasswordDto): Promise<CustomResponse> {
+        try {
+            const now = new Date()
+            const inviteLinkResponse = await this.prisma.getData('inviteLink', 'findUnique', { where: { token: body.token, used: false, expires_at: { gte: now } } })
+            if (inviteLinkResponse.error || !inviteLinkResponse.data)
+                return inviteLinkResponse
+
+            const hasedPassword = await hashPassword(body.password)
+
+            const createUserResponse = await this.prisma.postData('user', 'create', {
+                email: inviteLinkResponse.data.email,
+                password: hasedPassword,
+                role: inviteLinkResponse.data.role
+            })
+
+            if (createUserResponse.error || !createUserResponse.data)
+                return createUserResponse
+
+            await this.prisma.updateData('inviteLink', 'update', {
+                where: { id: inviteLinkResponse.data.id },
+                data: { used: true }
+            })
+
+            return { error: false, msg: 'Password Set Successfully', data: createUserResponse.data, status: HttpStatus.OK }
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
@@ -183,6 +285,37 @@ export class AuthService {
                 data: null,
                 status: HttpStatus.OK
             }
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async updateProfile(body: UpdateProfileDto, imagepath: string, userId: number): Promise<CustomResponse> {
+        try {
+            const updateProfileResponse = await this.prisma.updateData('user', 'update', {
+                where: { id: userId },
+                data: {
+                    first_name: body.first_name,
+                    last_name: body.last_name,
+                    image: imagepath
+                }
+            })
+
+            return updateProfileResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async getProfile(userId: number): Promise<CustomResponse> {
+        try {
+            const getProfileResponse = await this.prisma.getData('user', 'findUnique', {
+                where: { id: userId },
+            })
+
+            return getProfileResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }

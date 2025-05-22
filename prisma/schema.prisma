@@ -11,14 +11,25 @@ datasource db {
 model User {
   id              Int              @id @default(autoincrement())
   created_at      DateTime         @default(now())
+  image           String?
   email           String           @unique
-  first_name      String
-  last_name       String
+  first_name      String?
+  last_name       String?
   role            USER_ROLE
   password        String?
   items_cutting   Item_Cutting[]   @relation("workerDetails")
   items_stitching Item_Stitching[] @relation("workerDetails")
   user_otps       User_Otps[]
+}
+
+model InviteLink {
+  id         Int       @id @default(autoincrement())
+  create_at  DateTime  @default(now())
+  email      String
+  role       USER_ROLE
+  token      String    @unique
+  expires_at DateTime
+  used       Boolean   @default(false)
 }
 
 model User_Otps {
@@ -58,6 +69,7 @@ model Orders {
 model Order_Item {
   id                        Int                       @id @default(autoincrement())
   created_at                DateTime                  @default(now())
+  item_image                String
   item_description          String
   item_code                 String
   additional_specifications String?
