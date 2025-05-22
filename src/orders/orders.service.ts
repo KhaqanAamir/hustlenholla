@@ -2,28 +2,47 @@ import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
 import { PrismaService } from '../prisma_service/prisma.service';
-import { ORDER_ITEM_STATUS, ORDER_STATUS, Prisma } from '@prisma/client';
+import { ORDER_ITEM_CURRENT_STAGE, ORDER_ITEM_STATUS, ORDER_STATUS, Prisma } from '@prisma/client';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
 
     constructor(
-        private readonly prisma: PrismaService
+        private readonly prisma: PrismaService,
     ) { }
 
     async createOrder(createOrderDto: CreateOrderDto): Promise<CustomResponse> {
         try {
             const { requested_items, ...orderData } = createOrderDto;
-            const orderCreatedResponse = await this.prisma.postData('orders', 'create', {
-                ...orderData,
-                items: {
-                    create: [
-                        ...requested_items
-                    ]
-                }
-            })
-            return orderCreatedResponse
+            const [orderCreatedResponse] = await this.prisma.$transaction([
+                this.prisma.orders.create({
+                    data: {
+                        ...orderData,
+                        items: {
+                            create: requested_items.map((item) => ({
+                                ...item,
+                                current_process: ORDER_ITEM_CURRENT_STAGE.CUTTING,
+                            })),
+                        },
+                    },
+                    include: {
+                        items: true,
+                    },
+                })
+            ]);
+
+            const cuttingCreates = orderCreatedResponse.items.map((item) =>
+                this.prisma.item_Cutting.create({
+                    data: {
+                        order_item_id: item.id,
+                    },
+                })
+            );
+
+            await this.prisma.$transaction(cuttingCreates);
+
+            return { error: false, msg: "Order created successfully", data: orderCreatedResponse }
         }
         catch (e) {
             return { error: true, msg: `Internal server error occured, ${e}` }
@@ -229,6 +248,72 @@ export class OrdersService {
             getOrderResponse.data.time_line = sortedStages
 
             return getOrderResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async getWorkOrderStats({ where, skip, take }): Promise<CustomResponse> {
+        try {
+            const currentDate = new Date()
+            const assignedWorkOrders = await this.prisma.order_Item.count({
+                where: {
+                    status: ORDER_ITEM_STATUS.PENDING,
+                },
+            });
+
+            const pendingWorkOrders = await this.prisma.order_Item.count({
+                where: {
+                    order: {
+                        required_date: {
+                            lt: currentDate
+                        }
+                    },
+                    status: ORDER_ITEM_STATUS.PENDING
+                },
+            });
+
+            const completedWorkOrders = await this.prisma.order_Item.count({
+                where: {
+                    status: ORDER_ITEM_STATUS.COMPLETED
+                },
+            });
+
+            const getAllOrdersResponse = await this.prisma.getData('order_Item', 'findMany', {
+                skip,
+                take,
+                where: where,
+                include: {
+                    order: {
+                        select: {
+                            required_date: true
+                        }
+                    }
+                }
+            })
+
+            if (getAllOrdersResponse.data) {
+                getAllOrdersResponse.data = getAllOrdersResponse.data.map((o: any) => ({
+                    id: o.id,
+                    item_description: o.item_description,
+                    item_code: o.item_code,
+                    current_process: o.current_process,
+                    required_date: o.order.required_date,
+                    status: o.status
+                }))
+            }
+
+            return {
+                error: false,
+                data: {
+                    assigned_orders: assignedWorkOrders,
+                    pending_orders: pendingWorkOrders,
+                    completed_orders: completedWorkOrders,
+                    orders: getAllOrdersResponse.data
+                },
+                msg: 'Stats fetched successfully'
+            }
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }

@@ -84,14 +84,14 @@ export class OrdersController {
     async getAllWorkOrders(
         @Query() query: GetAllOrdersDto
     ) {
-        const where = query.query ? {
+        const where = query ? {
             item_description: {
                 contains: query.query || '',
                 mode: 'insensitive'
             },
             current_process: query.process
-        }
-            : {}
+        } : {}
+
         const skip = query.page_no && query.page_size ? (+query.page_no - 1) * +query.page_size : 0
         const take = query.page_size ? +query.page_size : 10
 
@@ -125,6 +125,24 @@ export class OrdersController {
             status: ORDER_STATUS.COMPLETED
         }
         return await this.ordersService.checkOrderCompletion({ where })
+    }
+
+
+    @Get('/work-order-stats')
+    async getWorkOrderStats(
+        @Query() query: GetAllOrdersDto
+    ) {
+        const where = query ? {
+            item_description: {
+                contains: query.query || '',
+                mode: 'insensitive'
+            },
+            current_process: query.process
+        } : {}
+
+        const skip = query.page_no && query.page_size ? (+query.page_no - 1) * +query.page_size : 0
+        const take = query.page_size ? +query.page_size : 10
+        return await this.ordersService.getWorkOrderStats({ where, skip, take })
     }
 
     @Put('order-item-id/:id/mark-as-completed')

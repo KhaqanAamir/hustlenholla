@@ -13,21 +13,11 @@ export class StitchingService {
 
     async startStitching(orderItemId: number): Promise<CustomResponse> {
         try {
-            const [createStitchingResponse, updateOrderItemResponse] = await this.prisma.$transaction([
-                this.prisma.item_Stitching.create({
-                    data: {
-                        order_item_id: orderItemId
-                    }
-                }),
-                this.prisma.order_Item.update({
-                    where: { id: orderItemId },
-                    data: {
-                        current_process: ORDER_ITEM_CURRENT_STAGE.STITCHING
-                    }
-                })
-            ]);
+            const createStitchingResponse = await this.prisma.postData('item_Stitching', 'create', {
+                order_item_id: orderItemId
+            })
 
-            return { error: false, msg: "Stitching stage started", data: createStitchingResponse };
+            return createStitchingResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
@@ -68,13 +58,44 @@ export class StitchingService {
 
     async updateStitching(stitchingItemId: number, body: UpdateStitchingDto, total_quantity: number, now: Date): Promise<CustomResponse> {
         try {
-            const updateStitchingResponse = await this.prisma.updateData('item_Stitching', 'update',
-                {
-                    where: { id: stitchingItemId },
-                    data: { ...body, status: STITCHING_STATUS.COMPLETED, completed_at: now, total_quantity: total_quantity }
-                })
+            const now = new Date()
+            const result = await this.prisma.$transaction(async (tx) => {
 
-            return updateStitchingResponse
+                const stitchingUpdate = await tx.item_Stitching.update({
+                    where: { id: stitchingItemId },
+                    //@ts-ignore
+                    data: {
+                        ...body,
+                        status: STITCHING_STATUS.COMPLETED,
+                        completed_at: now,
+                        total_quantity: total_quantity
+                    },
+                    include: {
+                        order_item: {
+                            select: { current_process: true }
+                        }
+                    }
+                });
+
+                //@ts-ignore
+                if (stitchingUpdate.order_item.current_process === ORDER_ITEM_CURRENT_STAGE.STITCHING) {
+                    // Step 3: Update order_Item
+                    await tx.order_Item.update({
+                        where: { id: stitchingUpdate.order_item_id },
+                        data: { current_process: ORDER_ITEM_CURRENT_STAGE.WASHING }
+                    });
+
+                    // Step 4: Create Washing stage
+                    await tx.item_Washing.create({
+                        data: {
+                            order_item_id: stitchingUpdate.order_item_id
+                        }
+                    });
+                }
+                return stitchingUpdate;
+            });
+
+            return { error: false, msg: "Stitching stage updated", data: result }
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }

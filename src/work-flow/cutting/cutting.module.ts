@@ -4,6 +4,7 @@ import { CuttingService } from './cutting.service';
 
 @Module({
   controllers: [CuttingController],
-  providers: [CuttingService]
+  providers: [CuttingService],
+  exports: [CuttingService]
 })
-export class CuttingModule {}
+export class CuttingModule { }
