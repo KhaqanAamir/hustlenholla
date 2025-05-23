@@ -19,41 +19,6 @@ export class OrdersController {
 
     constructor(private readonly ordersService: OrdersService) { }
 
-    // {
-    //     "required_date":"2025-06-13T09:00:00Z",
-    //     "supplier_name":"Khaqan's IT",
-    //     "supplier_address":"Bahria Town",
-    //     "customer_email":"abc@gmail.com",
-    //     "remarks":"first order",
-    //     "delivery_period":10,
-    //     "delivery_destination":"Islamabad",
-    //     "payment_terms":"unknown",
-    //     "freight_terms":"unknown",
-    //     "sales_tax":15,
-    //     "discount":0,
-    //     "freight":0,
-    //     "requested_items":[
-    //         {
-    //             "item_description":"excellent product",
-    //             "item_code":"UI-266",
-    //             "additional_specifications":"not required at the moment",
-    //             "category":"ZIPPER",
-    //             "unit":"9",
-    //             "quantity":500,
-    //             "rate":10
-    //         },
-    //         {
-    //             "item_description":"excellent product",
-    //             "item_code":"UI-266",
-    //             "additional_specifications":"not required at the moment",
-    //             "category":"ZIPPER",
-    //             "unit":"9",
-    //             "quantity":200,
-    //             "rate":13
-    //         }
-    //     ]
-    // }
-
     // splitting functions of order and requested items for reusability and testability,
     // also a modular approach to better debug and scale if we have to do in future
     @Post('/')
