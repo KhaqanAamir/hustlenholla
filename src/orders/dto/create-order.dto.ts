@@ -40,24 +40,28 @@ export class CreateOrderDto {
     @IsString()
     freight_terms: string
 
-    @IsNotEmpty()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => RequestedItemsDto)
-    requested_items: RequestedItemsDto[]
+    // @IsNotEmpty()
+    // @IsArray()
+    // @ValidateNested({ each: true })
+    // @Type(() => RequestedItemsDto)
+    // @IsString()
+    // requested_items: RequestedItemsDto[]
 
     @IsOptional()
     @IsNumber()
     total_amount: number
 
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
     sales_tax: number
 
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
     discount: number
 
+    @IsOptional()
     @IsNumber()
     @Type(() => Number)
     freight: number
