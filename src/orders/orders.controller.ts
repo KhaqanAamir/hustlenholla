@@ -10,6 +10,9 @@ import { diskStorage } from 'multer';
 import { join, extname } from 'path';
 import { UserGuard } from 'src/auth/guards/auth.guard';
 import { v4 as uuidv4 } from 'uuid'
+import { RequestedItemsDto } from './dto/requested-items.dto';
+import { ValidateNested } from 'class-validator';
+import { ParseJsonPipe } from 'src/utility/form-data-validation/parse-json-pipe';
 
 @Controller('orders')
 export class OrdersController {
@@ -74,16 +77,30 @@ export class OrdersController {
     )
     async createOrder(
         @UploadedFiles() itemImages: Express.Multer.File[],
+        @Body('requested_items', ParseJsonPipe) requestedItems: RequestedItemsDto[],
         @Body() createOrderDto: CreateOrderDto
     ) {
 
-        if (itemImages.length === createOrderDto.requested_items.length)
+        if (itemImages.length != requestedItems.length)
             throw new Error('Make sure to upload images for all requested items')
 
         const images = itemImages.map(file => `/uploads/${file.filename}`);
         let total_amount: number = 0;
 
-        createOrderDto.requested_items.forEach(item => {
+        if (typeof createOrderDto.delivery_period === 'string') {
+            createOrderDto.delivery_period = parseInt(createOrderDto.delivery_period, 10);
+        }
+        if (typeof createOrderDto.sales_tax === 'string') {
+            createOrderDto.sales_tax = parseInt(createOrderDto.sales_tax, 10);
+        }
+        if (typeof createOrderDto.discount === 'string') {
+            createOrderDto.discount = parseInt(createOrderDto.discount, 10);
+        }
+        if (typeof createOrderDto.freight === 'string') {
+            createOrderDto.freight = parseInt(createOrderDto.freight, 10);
+        }
+
+        requestedItems.forEach(item => {
             item.amount = this.calculateItemAmount(item.quantity, item.rate)
             total_amount += (item as any).amount
         })
@@ -102,7 +119,7 @@ export class OrdersController {
         createOrderDto.total_amount = total_amount
         createOrderDto.net_amount = net_amount
 
-        return await this.ordersService.createOrder(createOrderDto, images)
+        return await this.ordersService.createOrder(createOrderDto, requestedItems, images)
     }
 
     // the below function will upload record on requested_items table

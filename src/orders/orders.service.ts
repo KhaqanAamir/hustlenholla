@@ -4,6 +4,7 @@ import { CustomResponse } from 'src/types/types';
 import { PrismaService } from '../prisma_service/prisma.service';
 import { ORDER_ITEM_CURRENT_STAGE, ORDER_ITEM_STATUS, ORDER_STATUS, Prisma } from '@prisma/client';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { RequestedItemsDto } from './dto/requested-items.dto';
 
 @Injectable()
 export class OrdersService {
@@ -12,10 +13,9 @@ export class OrdersService {
         private readonly prisma: PrismaService,
     ) { }
 
-    async createOrder(createOrderDto: CreateOrderDto, itemImages: string[]): Promise<CustomResponse> {
+    async createOrder(createOrderDto: CreateOrderDto, requestedItems: RequestedItemsDto[], itemImages: string[]): Promise<CustomResponse> {
         try {
-            let { requested_items, ...orderData } = createOrderDto;
-            const itemsWithImages = requested_items.map((item, index) => ({
+            const itemsWithImages = requestedItems.map((item, index) => ({
                 ...item,
                 current_process: ORDER_ITEM_CURRENT_STAGE.CUTTING,
                 item_image: itemImages[index]
@@ -24,15 +24,28 @@ export class OrdersService {
             const [orderCreatedResponse] = await this.prisma.$transaction([
                 this.prisma.orders.create({
                     data: {
-                        ...orderData,
+                        required_date: new Date(createOrderDto.required_date),
+                        supplier_name: createOrderDto.supplier_name,
+                        supplier_address: createOrderDto.supplier_address,
+                        customer_email: createOrderDto.customer_email,
+                        remarks: createOrderDto.remarks,
+                        delivery_period: createOrderDto.delivery_period,
+                        delivery_destination: createOrderDto.delivery_destination,
+                        payment_terms: createOrderDto.payment_terms,
+                        freight_terms: createOrderDto.freight_terms,
+                        sales_tax: createOrderDto.sales_tax,
+                        discount: createOrderDto.discount,
+                        freight: createOrderDto.freight,
+                        total_amount: createOrderDto.total_amount,
+                        net_amount: createOrderDto.net_amount,
                         items: {
-                            create: itemsWithImages
+                            create: itemsWithImages,
                         },
                     },
                     include: {
                         items: true,
                     },
-                })
+                }),
             ]);
 
             const cuttingCreates = orderCreatedResponse.items.map((item) =>
