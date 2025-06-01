@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { CustomResponse } from 'src/types/types';
@@ -8,51 +8,14 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { join, extname } from 'path';
-import { UserGuard } from 'src/auth/guards/auth.guard';
 import { v4 as uuidv4 } from 'uuid'
 import { RequestedItemsDto } from './dto/requested-items.dto';
-import { ValidateNested } from 'class-validator';
 import { ParseJsonPipe } from 'src/utility/form-data-validation/parse-json-pipe';
 
 @Controller('orders')
 export class OrdersController {
 
     constructor(private readonly ordersService: OrdersService) { }
-
-    // {
-    //     "required_date":"2025-06-13T09:00:00Z",
-    //     "supplier_name":"Khaqan's IT",
-    //     "supplier_address":"Bahria Town",
-    //     "customer_email":"abc@gmail.com",
-    //     "remarks":"first order",
-    //     "delivery_period":10,
-    //     "delivery_destination":"Islamabad",
-    //     "payment_terms":"unknown",
-    //     "freight_terms":"unknown",
-    //     "sales_tax":15,
-    //     "discount":0,
-    //     "freight":0,
-    //     "requested_items":[
-    //         {
-    //             "item_description":"excellent product",
-    //             "item_code":"UI-266",
-    //             "additional_specifications":"not required at the moment",
-    //             "category":"ZIPPER",
-    //             "unit":"9",
-    //             "quantity":500,
-    //             "rate":10
-    //         },
-    //         {
-    //             "item_description":"excellent product",
-    //             "item_code":"UI-266",
-    //             "additional_specifications":"not required at the moment",
-    //             "category":"ZIPPER",
-    //             "unit":"9",
-    //             "quantity":200,
-    //             "rate":13
-    //         }
-    //     ]
-    // }
 
     // splitting functions of order and requested items for reusability and testability,
     // also a modular approach to better debug and scale if we have to do in future
@@ -220,9 +183,11 @@ export class OrdersController {
             current_process: query.process
         } : {}
 
+        const current_process = query.process ? query.process : null
+
         const skip = query.page_no && query.page_size ? (+query.page_no - 1) * +query.page_size : 0
         const take = query.page_size ? +query.page_size : 10
-        return await this.ordersService.getWorkOrderStats({ where, skip, take })
+        return await this.ordersService.getWorkOrderStats({ where, skip, take, current_process })
     }
 
     @Put('order-item-id/:id/mark-as-completed')
@@ -238,5 +203,12 @@ export class OrdersController {
         @Body() body: UpdateOrderDto
     ) {
         return await this.ordersService.updateOrder(orderId, body)
+    }
+
+    @Delete('/delete-work-order/:order_id')
+    async deleteOrder(
+        @Param('order_id', ParseIntPipe) orderId: number
+    ) {
+        return await this.ordersService.deleteOrder(orderId)
     }
 }

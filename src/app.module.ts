@@ -18,6 +18,7 @@ import { DispatchModule } from './work-flow/dispatching/dispatch.module';
 import { PackagingModule } from './work-flow/packaging/packaging.module';
 import { FabricInspectionModule } from './fabric-inspection/inspection.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { StoreModule } from './store/store.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
     DispatchModule,
     PackagingModule,
     FabricInspectionModule,
+    StoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],

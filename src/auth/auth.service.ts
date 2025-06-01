@@ -63,7 +63,6 @@ export class AuthService {
         try {
             const signedInResponse = await this.prisma.getData('user', 'findUnique', { where: { email: email }, select: { id: true, password: true, role: true } })
             if (!signedInResponse.error && signedInResponse.data != null && await comparePassword(password, signedInResponse.data.password)) {
-                console.log('signedInResponse', signedInResponse)
                 const { password: _, ...payload } = signedInResponse.data
                 const result = {
                     accessToken: this.jwtService.sign(payload),
@@ -316,6 +315,30 @@ export class AuthService {
             })
 
             return getProfileResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async getAllUsers(): Promise<CustomResponse> {
+        try {
+            const getAllUsersResponse = await this.prisma.getData('user', 'findMany')
+
+            return getAllUsersResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async deleteUser(userId: number): Promise<CustomResponse> {
+        try {
+            const deleteUserResponse = await this.prisma.deleteData('user', 'delete', {
+                where: { id: userId }
+            })
+
+            return deleteUserResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }

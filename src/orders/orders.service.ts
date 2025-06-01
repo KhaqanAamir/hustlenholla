@@ -270,30 +270,38 @@ export class OrdersService {
         }
     }
 
-    async getWorkOrderStats({ where, skip, take }): Promise<CustomResponse> {
+    async getWorkOrderStats({ where, skip, take, current_process }): Promise<CustomResponse> {
         try {
             const currentDate = new Date()
-            const assignedWorkOrders = await this.prisma.order_Item.count({
-                where: {
-                    status: ORDER_ITEM_STATUS.PENDING,
+            const filterForAssignedOrders: any = {
+                status: ORDER_ITEM_STATUS.PENDING
+            }
+            const filterForPndingOrders: any = {
+                order: {
+                    required_date: {
+                        lt: currentDate
+                    }
                 },
+                status: ORDER_ITEM_STATUS.PENDING
+            }
+            const filterForCompletedOrders: any = {
+                status: ORDER_ITEM_STATUS.COMPLETED
+            }
+            if (current_process) {
+                filterForAssignedOrders.current_process = current_process
+                filterForPndingOrders.current_process = current_process
+                filterForCompletedOrders.current_process = current_process
+            }
+            const assignedWorkOrders = await this.prisma.order_Item.count({
+                where: filterForAssignedOrders
             });
 
             const pendingWorkOrders = await this.prisma.order_Item.count({
-                where: {
-                    order: {
-                        required_date: {
-                            lt: currentDate
-                        }
-                    },
-                    status: ORDER_ITEM_STATUS.PENDING
-                },
+                where: filterForPndingOrders
             });
 
             const completedWorkOrders = await this.prisma.order_Item.count({
-                where: {
-                    status: ORDER_ITEM_STATUS.COMPLETED
-                },
+                where: filterForCompletedOrders
             });
 
             const getAllOrdersResponse = await this.prisma.getData('order_Item', 'findMany', {
@@ -366,6 +374,19 @@ export class OrdersService {
                 return updateOrderResponse
 
             return updateOrderResponse
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async deleteOrder(orderId: number): Promise<CustomResponse> {
+        try {
+            const deleteOrderResposne = await this.prisma.deleteData('order_Item', 'delete', {
+                where: { id: orderId }
+            })
+
+            return deleteOrderResposne
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }

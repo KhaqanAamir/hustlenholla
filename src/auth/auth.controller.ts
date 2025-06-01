@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserSignUpDto } from './dto/user-signup.dto';
 import { AuthBaseDto } from './dto/auth-base.dto';
@@ -140,5 +140,17 @@ export class AuthController {
         @Req() req
     ) {
         return await this.authService.getProfile(req.user.id)
+    }
+
+    @Get('/all-users')
+    async getAllUsers() {
+        return await this.authService.getAllUsers()
+    }
+
+    @Delete('/delete-user/:id')
+    async deleteUser(
+        @Param('id', ParseIntPipe) id: number
+    ) {
+        return await this.authService.deleteUser(id)
     }
 }
