@@ -16,6 +16,7 @@ export class CreateOrderDto {
     @IsString()
     supplier_address: string
 
+    @IsOptional()
     @IsString()
     @IsEmail()
     customer_email: string
@@ -40,12 +41,11 @@ export class CreateOrderDto {
     @IsString()
     freight_terms: string
 
-    // @IsNotEmpty()
-    // @IsArray()
-    // @ValidateNested({ each: true })
-    // @Type(() => RequestedItemsDto)
-    // @IsString()
-    // requested_items: RequestedItemsDto[]
+    @IsNotEmpty()
+    @Transform(({ value }) => RequestedItemsDto)
+    @ValidateNested({ each: true })
+    @Type(() => RequestedItemsDto)
+    requested_items: RequestedItemsDto[]
 
     @IsOptional()
     @IsNumber()
