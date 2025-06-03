@@ -112,7 +112,7 @@ export class AuthService {
 
             console.log(createInviteResponse)
 
-            const inviteLink = `${process.env.FRONTEND_URL}set-password?token=${token}`;
+            const inviteLink = `${process.env.FRONTEND_URL}/first_login/set-password?token=${token}`;
             await this.mailService.sendMail({
                 to: email,
                 template: 'invite-user',
