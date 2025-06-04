@@ -44,6 +44,17 @@ export class AuthController {
         return await this.authService.inviteUser(body)
     }
 
+    @Delete('/revoke-invite')
+    async revokeInvite(
+        @Body('email') email: string
+    ): Promise<CustomResponse> {
+        if (email.length === 0) {
+            return { error: false, msg: 'Please enter a valid email' }
+        }
+
+        return await this.authService.revokeInvite(email)
+    }
+
     @Get('/verify-invite-token/:token')
     async verifyInviteToken(
         @Param('token') token: string
@@ -53,6 +64,11 @@ export class AuthController {
         }
 
         return await this.authService.verifyInviteToken(token)
+    }
+
+    @Get('/all-invites')
+    async getAllInvites() {
+        return await this.authService.getAllInvites()
     }
 
     @Post('/set-password')

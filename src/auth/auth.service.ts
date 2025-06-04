@@ -136,6 +136,32 @@ export class AuthService {
         }
     }
 
+    async revokeInvite(email: string): Promise<CustomResponse> {
+        try {
+            const now = new Date();
+            const inviteLinkResponse = await this.prisma.getData('inviteLink', 'findFirst', { where: { email: email, used: false, expires_at: { gte: now } } })
+            if (inviteLinkResponse.error || !inviteLinkResponse.data)
+                return inviteLinkResponse
+
+            const deleteInviteResponse = await this.prisma.deleteData('inviteLink', 'delete', {
+                where: { id: inviteLinkResponse.data.id }
+            })
+
+            if (deleteInviteResponse.error || !deleteInviteResponse.data)
+                return deleteInviteResponse
+
+            return {
+                error: false,
+                msg: 'Invite revoked successfully',
+                data: null,
+                status: HttpStatus.OK
+            }
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
     async verifyInviteToken(token: string): Promise<CustomResponse> {
         try {
             const now = new Date();
@@ -149,6 +175,21 @@ export class AuthService {
                 data: inviteLinkResponse.data,
                 status: HttpStatus.OK
             }
+        }
+        catch (e) {
+            return { error: true, msg: `Inernal server error occured, ${e}` }
+        }
+    }
+
+    async getAllInvites(): Promise<CustomResponse> {
+        try {
+            const now = new Date();
+            const allInvitesResponse = await this.prisma.getData('inviteLink', 'findMany', {
+                where: { used: false, expires_at: { gte: now } },
+                orderBy: { create_at: 'desc' }
+            })
+
+            return allInvitesResponse
         }
         catch (e) {
             return { error: true, msg: `Inernal server error occured, ${e}` }
