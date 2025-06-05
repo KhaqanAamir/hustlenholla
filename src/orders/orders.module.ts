@@ -3,9 +3,10 @@ import { OrdersController } from './orders.controller';
 import { OrdersService } from './orders.service';
 import { SupabaseModule } from '../supabase/supabase.module';
 import { CuttingService } from 'src/work-flow/cutting/cutting.service';
+import { WorkOrdersModule } from './work-orders/work-orders.module';
 
 @Module({
-  imports: [SupabaseModule],
+  imports: [SupabaseModule, WorkOrdersModule],
   controllers: [OrdersController],
   providers: [OrdersService, CuttingService]
 })
