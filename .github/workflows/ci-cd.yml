@@ -7,9 +7,11 @@ on:
   pull_request:
     branches:
       - main
+
 permissions:
   contents: read
   packages: write
+
 jobs:
   build-and-push:
     name: Build & Push Docker Image
@@ -17,19 +19,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Log in to Github Container Registery
-        run: echo "${{ secrets.GITHUB_TOKEN}}" | docker login ghcr.io -u ${{ github.actor}} --password-stdin
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Extract and format repository name
-        run: echo "REPO_NAME=$(echo '${{github.repository}} | tr '[:upper:] '[:lower:]')" >> $GITHUB_ENV
+        run: echo "REPO_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ env.REPO_NAME}}/${{ secrets.APP_NAME }}:latest .
+        run: docker build -t ghcr.io/${{ env.REPO_NAME }}/${{ secrets.APP_NAME }}:latest .
 
-      - name: Push Docker image to Github Container Registery
-        run: docker push ghcr.io/${{ env.REPO_NAME}}/${{ secrets.APP_NAME }}:latest
+      - name: Push Docker image to GitHub Container Registry
+        run: docker push ghcr.io/${{ env.REPO_NAME }}/${{ secrets.APP_NAME }}:latest
 
   deploy:
     name: Deploy to Railway
