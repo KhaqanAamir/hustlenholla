@@ -30,7 +30,7 @@ jobs:
       - name: Build Docker image
         run: docker build -t ghcr.io/${{ env.REPO_NAME }}/${{ secrets.APP_NAME }}:latest .
 
-      - name: Push Docker image to GitHub Container Registry
+      - name: Push Docker image to Github Container Registry
         run: docker push ghcr.io/${{ env.REPO_NAME }}/${{ secrets.APP_NAME }}:latest
 
   deploy:
