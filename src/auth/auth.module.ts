@@ -9,6 +9,10 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
     PassportModule,
     ConfigModule.forRoot({ isGlobal: true }),
     JwtModule.register({

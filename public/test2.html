@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple WebRTC</title>
+</head>
+<body>
+  <h2>Simple WebRTC Video Call</h2>
+  <video id="localVideo" autoplay muted></video>
+  <video id="remoteVideo" autoplay></video>
+  <button id="startBtn">Start</button>
+  <button id="callBtn">Call</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+   <script>
+    const socket= io();
+    const localVideo = document.getElementById("localVideo");
+    const remoteVideo = document.getElementById("remoteVideo");
+    const startBtn = document.getElementById("startBtn");
+    const callBtn = document.getElementById("callBtn");
+
+    let localStream;
+    let peer; 
+
+    startBtn.onClick = async () =>{
+        localStream = await navigator.mediaDevices.getUserMedia({video:true, audio: true})
+        localVideo.srcObject = localStream;
+    }
+
+    callBtn.onClick = async ()=>{
+        peer = createPeer();
+
+    }
+
+    function createPeer(){
+        const peer = new RTCPeerConnection()
+
+        peer.onicecandidate = e =>{
+            if(e.candidate){
+                socket.emit("ice-candidate", e.candidate);
+            }
+        }
+
+        peer.ontrack = e => {
+            remoteVideo.srcObject = e.streams[0];
+        };
+
+        peer.onnegotiationneeded = async () =>{
+            const offer = await peer.createOffer();
+            await peer.setLocalDescription(offer);
+            socket.emit("offer", offer);
+        }
+
+        return peer;
+    }
+
+    
+   </script>
+ </body>
+</html>

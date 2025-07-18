@@ -23,6 +23,9 @@ import { WorkOrdersModule } from './orders/work-orders/work-orders.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     MailerModule.forRoot({
       transport: {
         host: process.env.MAIL_SERVER,
